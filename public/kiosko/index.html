@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Donatto Resto-Bar — Kiosko</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ───── PANTALLA 1: BIENVENIDA ───── -->
+  <section id="screen-welcome" class="screen active">
+    <div class="welcome-card">
+      <h1 class="brand">DONATTO</h1>
+      <p class="tagline">Resto-Bar · Comida Colombiana e Italiana</p>
+      <div class="welcome-actions">
+        <button class="btn-mode" data-mode="mesa">
+          <span class="mode-icon">🍽️</span>
+          <span class="mode-label">COMER EN MESA</span>
+        </button>
+        <button class="btn-mode" data-mode="para_llevar">
+          <span class="mode-icon">🥡</span>
+          <span class="mode-label">PARA LLEVAR</span>
+        </button>
+      </div>
+      <p class="hint">Toca para empezar tu pedido</p>
+    </div>
+  </section>
+
+  <!-- ───── PANTALLA 2: MENÚ ───── -->
+  <section id="screen-menu" class="screen">
+    <header class="menu-header">
+      <button class="btn-back" data-action="back-welcome">←</button>
+      <div class="header-title">
+        <span class="brand-small">DONATTO</span>
+        <span id="mode-badge" class="mode-badge"></span>
+      </div>
+      <button class="btn-cart" data-action="open-cart">
+        🛒 <span id="cart-count">0</span>
+      </button>
+    </header>
+
+    <main class="menu-body">
+      <aside id="categories" class="categories"></aside>
+      <section id="products" class="products"></section>
+    </main>
+
+    <footer class="cart-bar" data-action="open-cart">
+      <span>Ver pedido</span>
+      <span id="cart-bar-count">0 ítems</span>
+      <span id="cart-bar-total">$0</span>
+    </footer>
+  </section>
+
+  <!-- ───── PANTALLA 3: CARRITO ───── -->
+  <section id="screen-cart" class="screen">
+    <header class="cart-header">
+      <button class="btn-back" data-action="back-menu">←</button>
+      <h2>Tu pedido</h2>
+      <button class="btn-clear" data-action="clear-cart">Vaciar</button>
+    </header>
+    <main id="cart-list" class="cart-list"></main>
+    <footer class="cart-footer">
+      <div class="cart-total">
+        <span>TOTAL</span>
+        <span id="cart-total">$0</span>
+      </div>
+      <button class="btn-primary" data-action="go-checkout">CONTINUAR AL PAGO →</button>
+    </footer>
+  </section>
+
+  <!-- ───── PANTALLA 4: CHECKOUT ───── -->
+  <section id="screen-checkout" class="screen">
+    <header class="cart-header">
+      <button class="btn-back" data-action="back-cart">←</button>
+      <h2>Confirmar pedido</h2>
+      <span></span>
+    </header>
+    <main class="checkout-body">
+
+      <div class="field">
+        <label>Tu nombre <span class="optional">(opcional)</span></label>
+        <input id="customer-name" type="text" placeholder="Para llamarte cuando esté listo" maxlength="60" autocomplete="off" />
+      </div>
+
+      <div id="mesa-field" class="field hidden">
+        <label>Número de mesa</label>
+        <input id="mesa-number" type="text" placeholder="Ej. 5" maxlength="3" inputmode="numeric" />
+      </div>
+
+      <div class="field">
+        <label>Notas para la cocina <span class="optional">(opcional)</span></label>
+        <textarea id="order-notes" placeholder="Sin cebolla, sin picante…" maxlength="200" rows="2"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Método de pago</label>
+        <div id="payment-methods" class="payment-grid"></div>
+      </div>
+
+      <div class="checkout-summary">
+        <div>Ítems: <strong id="checkout-items-count">0</strong></div>
+        <div class="total-line">TOTAL <strong id="checkout-total">$0</strong></div>
+      </div>
+
+      <button id="btn-confirm" class="btn-primary" data-action="submit-order">CONFIRMAR Y ENVIAR A COCINA</button>
+    </main>
+  </section>
+
+  <!-- ───── PANTALLA 5: CONFIRMACIÓN ───── -->
+  <section id="screen-confirm" class="screen">
+    <div class="confirm-card">
+      <div class="confirm-check">✓</div>
+      <h2>¡Pedido recibido!</h2>
+      <div class="ticket-box">
+        <span class="ticket-label">Tu ticket</span>
+        <span id="confirm-ticket" class="ticket-number">K-001</span>
+      </div>
+      <div id="confirm-details" class="confirm-details"></div>
+      <p id="confirm-instructions" class="confirm-instructions"></p>
+      <button class="btn-primary" data-action="restart">NUEVO PEDIDO</button>
+    </div>
+  </section>
+
+  <!-- ───── MODAL: ITEM DETAIL ───── -->
+  <div id="modal-item" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" data-action="close-modal">×</button>
+      <h3 id="modal-name"></h3>
+      <p id="modal-desc"></p>
+      <div class="modal-price" id="modal-price"></div>
+      <div class="qty-row">
+        <button class="btn-qty" data-action="qty-minus">−</button>
+        <span id="modal-qty">1</span>
+        <button class="btn-qty" data-action="qty-plus">+</button>
+      </div>
+      <button class="btn-primary" data-action="add-to-cart">AGREGAR AL PEDIDO</button>
+    </div>
+  </div>
+
+  <!-- ───── LOADER ───── -->
+  <div id="loader" class="loader hidden"><div class="spinner"></div></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

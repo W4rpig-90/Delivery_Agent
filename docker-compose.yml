@@ -1,0 +1,27 @@
+# Despliegue de producción para el mini-PC del local.
+#   docker compose up -d --build      → arranca en segundo plano
+#   docker compose logs -f            → ver logs (y escanear el QR de WhatsApp)
+#   docker compose restart            → reiniciar
+# Sobrevive cortes de luz gracias a restart: unless-stopped.
+services:
+  app:
+    build: .
+    image: donatto-resto-bar
+    container_name: donatto
+    restart: unless-stopped
+    init: true                       # tini: cosecha procesos hijos de Chromium (zombies)
+    env_file: .env
+    environment:
+      - KIOSK_PORT=3000              # el contenedor siempre escucha en 3000
+    ports:
+      - "${KIOSK_PORT:-3000}:3000"   # host:contenedor (cambia el host en .env si hace falta)
+    volumes:
+      - ./data:/app/data             # SQLite + imágenes subidas (persistente)
+      - ./.wwebjs_auth:/app/.wwebjs_auth   # sesión de WhatsApp (no re-escanear QR)
+      - ./.wwebjs_cache:/app/.wwebjs_cache
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s

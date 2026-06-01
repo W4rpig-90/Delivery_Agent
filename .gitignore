@@ -1,0 +1,17 @@
+node_modules/
+.env
+.wwebjs_auth/
+.wwebjs_cache/
+pedidos.log
+*.log
+
+# Base de datos SQLite (datos locales, no versionar)
+*.db
+*.db-shm
+*.db-wal
+
+# Imágenes subidas desde el panel admin
+data/uploads/
+
+# macOS
+.DS_Store

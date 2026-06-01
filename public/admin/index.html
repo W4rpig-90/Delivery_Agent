@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · Donatto Resto-Bar</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- LOGIN -->
+  <div id="login-view" class="login-wrap">
+    <form id="login-form" class="login-card">
+      <h1>🍽️ Donatto Admin</h1>
+      <p class="muted">Panel de administración</p>
+      <input id="login-user" type="text" placeholder="Usuario" autocomplete="username" required />
+      <input id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password" required />
+      <button type="submit">Entrar</button>
+      <div id="login-error" class="error hidden"></div>
+    </form>
+  </div>
+
+  <!-- APP -->
+  <div id="app-view" class="hidden">
+    <header class="topbar">
+      <span class="brand">🍽️ <strong id="brand-name">Donatto</strong> · Admin</span>
+      <nav class="tabs">
+        <button class="tab active" data-tab="products">Productos</button>
+        <button class="tab" data-tab="categories">Categorías</button>
+        <button class="tab" data-tab="payments">Pagos</button>
+        <button class="tab" data-tab="settings">Ajustes</button>
+      </nav>
+      <span class="topbar-right">
+        <span id="who" class="muted"></span>
+        <button class="link" data-action="change-pass">Contraseña</button>
+        <button class="link" data-action="logout">Salir</button>
+      </span>
+    </header>
+
+    <main>
+      <!-- PRODUCTOS -->
+      <section id="tab-products" class="tab-panel active">
+        <div class="panel-head">
+          <h2>Productos</h2>
+          <button class="primary" data-action="new-product">+ Nuevo producto</button>
+        </div>
+        <table class="grid">
+          <thead><tr><th>Img</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </section>
+
+      <!-- CATEGORÍAS -->
+      <section id="tab-categories" class="tab-panel">
+        <div class="panel-head">
+          <h2>Categorías</h2>
+          <button class="primary" data-action="new-category">+ Nueva categoría</button>
+        </div>
+        <table class="grid">
+          <thead><tr><th>Orden</th><th>Emoji</th><th>Nombre</th><th>Slug</th><th>Productos</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="categories-body"></tbody>
+        </table>
+      </section>
+
+      <!-- PAGOS -->
+      <section id="tab-payments" class="tab-panel">
+        <div class="panel-head"><h2>Métodos de pago</h2></div>
+        <table class="grid">
+          <thead><tr><th>Código</th><th>Etiqueta</th><th>Tipo</th><th>QR</th><th>Habilitado</th><th></th></tr></thead>
+          <tbody id="payments-body"></tbody>
+        </table>
+      </section>
+
+      <!-- AJUSTES -->
+      <section id="tab-settings" class="tab-panel">
+        <div class="panel-head"><h2>Ajustes generales</h2></div>
+        <form id="settings-form" class="form-card">
+          <label>Nombre del negocio<input name="brand_name" type="text" /></label>
+          <label>Número de cocina (WhatsApp)<input name="kitchen_number" type="text" placeholder="573104859728" /></label>
+          <label>Moneda<input name="currency" type="text" maxlength="3" /></label>
+          <button class="primary" type="submit">Guardar</button>
+          <span id="settings-saved" class="ok hidden">Guardado ✓</span>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL genérico -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="modal-title"></h3><button class="x" data-action="close-modal">×</button></div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <input type="file" id="file-input" accept="image/*" class="hidden" />
+
+  <script src="app.js"></script>
+</body>
+</html>

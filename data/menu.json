@@ -1,0 +1,412 @@
+{
+  "restaurante": {
+    "nombre": "Donatto resto-bar",
+    "descripcion": "Comida Colombiana e Italiana",
+    "historia": "Un sueño familiar con más de 15 años de trayectoria."
+  },
+  "categorias": [
+    {
+      "id": "entradas",
+      "nombre": "Entradas",
+      "emoji": "🥗",
+      "items": [
+        {
+          "id": "E01",
+          "nombre": "Patacones x6",
+          "precio": 10000,
+          "descripcion": "6 porciones con guacamole, hogao o salsa de la casa."
+        },
+        {
+          "id": "E02",
+          "nombre": "Deditos de queso x6",
+          "precio": 12000,
+          "descripcion": "6 porciones con mermelada de piña."
+        },
+        {
+          "id": "E03",
+          "nombre": "Empanadas x6",
+          "precio": 12000,
+          "descripcion": "6 porciones con ají o salsa de la casa."
+        },
+        {
+          "id": "E04",
+          "nombre": "Ceviche de Chicharrón",
+          "precio": 32000,
+          "descripcion": "Base de cebolla roja, limón, cilantro, chicharrón y tiras de plátano verde."
+        },
+        {
+          "id": "E05",
+          "nombre": "Crema Tomate",
+          "precio": 20000,
+          "descripcion": "Base de tomate con parmesano y pan."
+        },
+        {
+          "id": "E06",
+          "nombre": "Bruschettas al Crudo",
+          "precio": 18000,
+          "descripcion": "Pan con jamón serrano, tomate cherry, albahaca y aceite de oliva."
+        },
+        {
+          "id": "E07",
+          "nombre": "Fritto Mixto",
+          "precio": 40000,
+          "descripcion": "Anillos de calamar y langostinos apanados con salsa de la casa."
+        },
+        {
+          "id": "E08",
+          "nombre": "Burrata D´capresse",
+          "precio": 30000,
+          "descripcion": "Lechuga, tomate cherry, aceitunas, jamón serrano, burrata y balsámico."
+        }
+      ]
+    },
+    {
+      "id": "pizzas_recomendadas",
+      "nombre": "Pizzas Recomendadas",
+      "emoji": "🌟",
+      "items": [
+        {
+          "id": "PR01",
+          "nombre": "Pizza Donatto",
+          "precio": 70000,
+          "descripcion": "Base napolitana, mozzarella, jamón serrano, tomate cherry, cebolla caramelizada, rúgula, parmesano, burrata y balsámico."
+        },
+        {
+          "id": "PR02",
+          "nombre": "Pizza Fenix",
+          "precio": 60000,
+          "descripcion": "Base napolitana, mozzarella, pepperoni, tocineta, piña y burrata."
+        },
+        {
+          "id": "PR03",
+          "nombre": "Pizza Mixta de Carnes",
+          "precio": 58000,
+          "descripcion": "Base napolitana, mozzarella, jamón ahumado, salami, tocineta y pepperoni."
+        },
+        {
+          "id": "PR04",
+          "nombre": "Pizza Donatella",
+          "precio": 60000,
+          "descripcion": "Base napolitana, mozzarella, pulled pork, tocineta, piña y queso philadelphia."
+        }
+      ]
+    },
+    {
+      "id": "pizzas_autor",
+      "nombre": "Pizzas de Autor",
+      "emoji": "👨‍🍳",
+      "items": [
+        {
+          "id": "PA01",
+          "nombre": "Pizza Mixta de Quesos",
+          "precio": 58000,
+          "descripcion": "Mozzarella, queso azul, queso holandés y queso grana padano."
+        },
+        {
+          "id": "PA02",
+          "nombre": "Pizza Mixta de Carnes y Quesos",
+          "precio": 65000,
+          "descripcion": "Mozzarella, jamón ahumado, pepperoni, tocineta, queso holandés, azul y parmesano."
+        },
+        {
+          "id": "PA03",
+          "nombre": "Mixta Donatto",
+          "precio": 68000,
+          "descripcion": "Mozzarella, jamón ahumado, pepperoni, salami, tocineta, pollo desmechado y champiñones."
+        },
+        {
+          "id": "PA04",
+          "nombre": "Pizza Toscana",
+          "precio": 58000,
+          "descripcion": "Mozzarella, jamón ahumado, pollo, champiñones, tocineta y maíz tierno."
+        },
+        {
+          "id": "PA05",
+          "nombre": "Pizza Marinera",
+          "precio": 80000,
+          "descripcion": "Mozzarella, langostinos, calamar, pulpo y salmón."
+        },
+        {
+          "id": "PA06",
+          "nombre": "Pizza Capresse",
+          "precio": 50000,
+          "descripcion": "Mozzarella, tomate cherry, albahaca y burrata."
+        },
+        {
+          "id": "PA07",
+          "nombre": "Pizza Ropa Vieja",
+          "precio": 58000,
+          "descripcion": "Mozzarella, carne desmechada, cebolla puerro, maduritos y aguacate."
+        },
+        {
+          "id": "PA08",
+          "nombre": "Pizza Romana",
+          "precio": 45000,
+          "descripcion": "Mozzarella, jamón ahumado, pepperoni, champiñones, tomate y orégano."
+        }
+      ]
+    },
+    {
+      "id": "pizzas_tradicionales",
+      "nombre": "Pizzas Tradicionales",
+      "emoji": "🍕",
+      "items": [
+        {
+          "id": "PT01",
+          "nombre": "Pizza Hawaiana",
+          "precio": 40000,
+          "descripcion": "Base napolitana, mozzarella, jamón ahumado y piña."
+        },
+        {
+          "id": "PT02",
+          "nombre": "Pizza Pepperoni",
+          "precio": 40000,
+          "descripcion": "Base napolitana, mozzarella y pepperoni."
+        },
+        {
+          "id": "PT03",
+          "nombre": "Pizza Jamón y Queso",
+          "precio": 40000,
+          "descripcion": "Base napolitana, mozzarella y jamón ahumado."
+        },
+        {
+          "id": "PT04",
+          "nombre": "Pizza Marguerita",
+          "precio": 36000,
+          "descripcion": "Base napolitana, mozzarella, rodajas de tomate chonto y albahaca."
+        },
+        {
+          "id": "PT05",
+          "nombre": "Pizza Pollo y Champiñones",
+          "precio": 45000,
+          "descripcion": "Base napolitana, mozzarella, pollo y champiñones."
+        },
+        {
+          "id": "PT06",
+          "nombre": "Pizza Salami",
+          "precio": 40000,
+          "descripcion": "Base napolitana, mozzarella y salami."
+        },
+        {
+          "id": "PT07",
+          "nombre": "Pizza Jamón Serrano",
+          "precio": 40000,
+          "descripcion": "Base napolitana, mozzarella y jamón serrano."
+        },
+        {
+          "id": "PT08",
+          "nombre": "Pizza Vegetariana",
+          "precio": 55000,
+          "descripcion": "Mozzarella, champiñones, zuccini, pimentón, cebolla, tomate y orégano."
+        },
+        {
+          "id": "PT09",
+          "nombre": "Pizza Napolitana",
+          "precio": 45000,
+          "descripcion": "Mozzarella, jamón ahumado y champiñones."
+        }
+      ]
+    },
+    {
+      "id": "adiciones_pizzas",
+      "nombre": "Adiciones (Pizzas)",
+      "emoji": "➕",
+      "items": [
+        {
+          "id": "AD01",
+          "nombre": "Queso Mozarella",
+          "precio": 8000
+        },
+        {
+          "id": "AD02",
+          "nombre": "Carne Desmechada",
+          "precio": 9000
+        },
+        {
+          "id": "AD03",
+          "nombre": "Pollo Desmechado",
+          "precio": 9000
+        },
+        {
+          "id": "AD04",
+          "nombre": "Pepperoni o Salami",
+          "precio": 8000
+        },
+        {
+          "id": "AD05",
+          "nombre": "Queso Burrata",
+          "precio": 15000
+        },
+        {
+          "id": "AD06",
+          "nombre": "Jamón ahumado o Tocineta",
+          "precio": 8000
+        },
+        {
+          "id": "AD07",
+          "nombre": "Jamón serrano",
+          "precio": 10000
+        },
+        {
+          "id": "AD08",
+          "nombre": "Parmessano",
+          "precio": 5000
+        },
+        {
+          "id": "AD09",
+          "nombre": "Queso Philadelphia",
+          "precio": 8000
+        },
+        {
+          "id": "AD10",
+          "nombre": "Piña",
+          "precio": 4000
+        },
+        {
+          "id": "AD11",
+          "nombre": "Maduritos",
+          "precio": 3000
+        },
+        {
+          "id": "AD12",
+          "nombre": "Tomate",
+          "precio": 3000
+        },
+        {
+          "id": "AD13",
+          "nombre": "Champiñones",
+          "precio": 4000
+        }
+      ]
+    },
+    {
+      "id": "pastas",
+      "nombre": "Pastas",
+      "emoji": "🍝",
+      "items": [
+        {
+          "id": "PAS01",
+          "nombre": "Pasta Al Burro",
+          "precio": 28000
+        },
+        {
+          "id": "PAS02",
+          "nombre": "Pasta Napolitana",
+          "precio": 28000
+        },
+        {
+          "id": "PAS03",
+          "nombre": "Pasta Carbonara",
+          "precio": 32000
+        },
+        {
+          "id": "PAS04",
+          "nombre": "Pasta Alfredo",
+          "precio": 32000
+        },
+        {
+          "id": "PAS05",
+          "nombre": "Pasta Bolognesa",
+          "precio": 32000
+        },
+        {
+          "id": "PAS06",
+          "nombre": "Pasta Siciliana",
+          "precio": 34000
+        },
+        {
+          "id": "PAS07",
+          "nombre": "Pasta Al Salmon",
+          "precio": 40000
+        },
+        {
+          "id": "PAS08",
+          "nombre": "Pasta Al Vodka",
+          "precio": 42000
+        },
+        {
+          "id": "PAS09",
+          "nombre": "Pasta Frutti D´mar",
+          "precio": 55000
+        }
+      ]
+    },
+    {
+      "id": "lasagnes",
+      "nombre": "Lasagnes",
+      "emoji": "🥘",
+      "items": [
+        {
+          "id": "LAS01",
+          "nombre": "Lasagne Bolognese",
+          "precio": 32000
+        },
+        {
+          "id": "LAS02",
+          "nombre": "Lasagne Pollo y Champiñones",
+          "precio": 32000
+        },
+        {
+          "id": "LAS03",
+          "nombre": "Lasagne Mixta",
+          "precio": 35000
+        }
+      ]
+    },
+    {
+      "id": "hamburguesas",
+      "nombre": "Hamburguesas Gourmet",
+      "emoji": "🍔",
+      "nota": "Adición de papas francesa + $5.000",
+      "items": [
+        {
+          "id": "H01",
+          "nombre": "Tocineta Sagrada",
+          "precio": 35000
+        },
+        {
+          "id": "H02",
+          "nombre": "Donatto Pork",
+          "precio": 35000
+        },
+        {
+          "id": "H03",
+          "nombre": "Hamburguesa Res",
+          "precio": 30000
+        },
+        {
+          "id": "H04",
+          "nombre": "La Gringa",
+          "precio": 30000
+        }
+      ]
+    },
+    {
+      "id": "postres",
+      "nombre": "Postres",
+      "emoji": "🍮",
+      "items": [
+        {
+          "id": "POS01",
+          "nombre": "Chessecake (Varios sabores)",
+          "precio": 12000
+        },
+        {
+          "id": "POS02",
+          "nombre": "Cuchareables",
+          "precio": 12000
+        },
+        {
+          "id": "POS03",
+          "nombre": "Galletas",
+          "precio": 8000
+        },
+        {
+          "id": "POS04",
+          "nombre": "Alfajor",
+          "precio": 5000
+        }
+      ]
+    }
+  ]
+}

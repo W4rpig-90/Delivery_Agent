@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cocina · Donatto Resto-Bar</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- LOGIN -->
+  <div id="login-view" class="login-wrap">
+    <form id="login-form" class="login-card">
+      <h1>👨‍🍳 Cocina Donatto</h1>
+      <input id="login-user" type="text" placeholder="Usuario" autocomplete="username" required />
+      <input id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password" required />
+      <button type="submit">Entrar</button>
+      <div id="login-error" class="error hidden"></div>
+    </form>
+  </div>
+
+  <!-- TABLERO -->
+  <div id="board-view" class="hidden">
+    <header class="topbar">
+      <span class="title">👨‍🍳 Cocina</span>
+      <span id="conn" class="conn off">●  conectando…</span>
+      <span class="count"><strong id="order-count">0</strong> activos</span>
+    </header>
+    <main id="board" class="board"></main>
+    <div id="empty" class="empty hidden">Sin pedidos activos. 🍽️</div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>

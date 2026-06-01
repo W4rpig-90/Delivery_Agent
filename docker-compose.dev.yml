@@ -1,0 +1,18 @@
+# Override de desarrollo. Úsalo así:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Monta el código para recarga en caliente y deja WhatsApp apagado
+# (en dev normalmente se prueba el bot nativamente con `npm start`).
+services:
+  app:
+    environment:
+      - NODE_ENV=development
+      - WHATSAPP_LOCAL_ENABLED=false
+      - KIOSK_ENABLED=true
+    volumes:
+      - ./src:/app/src
+      - ./services:/app/services
+      - ./public:/app/public
+      - ./data:/app/data
+      - ./index.js:/app/index.js
+    command: ["node", "--watch", "index.js"]
+    restart: "no"

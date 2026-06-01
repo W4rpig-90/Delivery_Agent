@@ -1,0 +1,28 @@
+# Dependencias y artefactos locales (se reinstalan dentro del contenedor)
+node_modules
+npm-debug.log
+
+# Datos y sesión locales (se montan como volúmenes en runtime)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/uploads/
+.wwebjs_auth
+.wwebjs_cache
+
+# Secretos y logs
+.env
+*.log
+
+# Git y metadatos
+.git
+.gitignore
+.DS_Store
+
+# Archivos de Docker y docs (no necesarios dentro de la imagen)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+README*.md
+scratch
+.claude
