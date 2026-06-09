@@ -5,6 +5,8 @@
 
 const express = require("express");
 const path = require("path");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
 const kioskRoutes = require("./routes/kiosk.routes");
 const authRoutes = require("./routes/auth.routes");
@@ -17,8 +19,21 @@ const { UPLOADS_DIR } = require("./services/uploadService");
 const PORT = parseInt(process.env.KIOSK_PORT || process.env.PORT || "3000", 10);
 const PUBLIC_DIR = path.resolve(__dirname, "..", "public");
 
+// Máx 10 intentos de login por IP cada 15 minutos
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Demasiados intentos. Espera 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 function buildApp() {
   const app = express();
+
+  // Headers de seguridad HTTP (XSS, clickjacking, MIME sniffing, etc.)
+  app.use(helmet({ contentSecurityPolicy: false }));
+
   app.use(express.json({ limit: "1mb" }));
 
   // Estáticos
@@ -29,11 +44,13 @@ function buildApp() {
   app.use("/uploads", express.static(UPLOADS_DIR));
 
   // API
-  app.use("/api", kioskRoutes);        // /api/menu, /api/orders
-  app.use("/api/admin", authRoutes);   // /login, /logout, /me, /change-password (público)
-  app.use("/api/admin", adminRoutes);  // CRUD (requireAuth)
-  app.use("/api/kds", kdsRoutes);      // tablero de cocina (requireAuth)
-  app.use("/api/ops", opsRoutes);  // panel de operador (OPS_PASSWORD)
+  app.use("/api", kioskRoutes);                            // /api/menu, /api/orders
+  app.use("/api/admin/login", loginLimiter);               // anti brute-force
+  app.use("/api/ops/login",   loginLimiter);               // anti brute-force
+  app.use("/api/admin", authRoutes);                       // /login, /logout, /me, /change-password
+  app.use("/api/admin", adminRoutes);                      // CRUD (requireAuth)
+  app.use("/api/kds", kdsRoutes);                          // tablero de cocina (requireAuth)
+  app.use("/api/ops", opsRoutes);                          // panel de operador (OPS_PASSWORD)
 
   app.get("/", (_req, res) => res.redirect("/kiosko"));
   app.get("/health", (_req, res) =>
