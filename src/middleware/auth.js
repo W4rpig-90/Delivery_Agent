@@ -57,10 +57,11 @@ function parseCookies(req) {
 }
 
 function setSessionCookie(res, token) {
-  const secure = process.env.NODE_ENV === "production" ? " Secure;" : "";
+  // Sin flag Secure: el panel se sirve por HTTP directo (IP:puerto).
+  // HttpOnly + SameSite=Lax son suficientes para uso en red local.
   res.setHeader(
     "Set-Cookie",
-    `${COOKIE_NAME}=${token}; HttpOnly; Path=/; Max-Age=${Math.floor(MAX_AGE_MS / 1000)}; SameSite=Lax;${secure}`
+    `${COOKIE_NAME}=${token}; HttpOnly; Path=/; Max-Age=${Math.floor(MAX_AGE_MS / 1000)}; SameSite=Lax`
   );
 }
 
