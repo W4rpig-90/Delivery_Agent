@@ -32,3 +32,13 @@ reset_admin.js
 fix_admin*.js
 test_admin*.js
 *_panel.png
+
+# Datos de instancias de bot y proxy (generados en runtime)
+data/instances/
+data/proxy/
+
+# Backups de .env
+.env.save
+
+# Entorno virtual Python (scripts de utilidad)
+venv/
