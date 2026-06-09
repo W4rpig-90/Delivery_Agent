@@ -82,6 +82,9 @@ main{max-width:1000px;margin:0 auto;padding:24px 20px}
 .card-title{font-size:15px;font-weight:700;margin-bottom:4px}
 .field-hint{font-size:12px;color:var(--ink-soft);font-weight:400;margin-top:2px}
 
+/* SETTINGS 2-col grid responsive */
+@media(max-width:680px){#tab-settings>div{grid-template-columns:1fr!important}}
+
 /* WHATSAPP tab */
 .wa-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
 @media(max-width:640px){.wa-grid{grid-template-columns:1fr}}
@@ -92,6 +95,23 @@ main{max-width:1000px;margin:0 auto;padding:24px 20px}
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.2)}
 .toast.err{background:var(--brand)}
+
+/* STATUS SELECT */
+.status-select{font-size:12px;font-weight:700;padding:4px 8px;border-radius:20px;border:none;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px}
+.status-select.status-pending{background-color:#fef3c7;color:#92400e}
+.status-select.status-accepted{background-color:#d1fae5;color:#065f46}
+.status-select.status-cooking{background-color:#dbeafe;color:#1e40af}
+.status-select.status-sent{background-color:#ede9fe;color:#5b21b6}
+.status-select.status-ready{background-color:#d1fae5;color:#065f46}
+.status-select.status-cancelled{background-color:#fee2e2;color:#991b1b}
+
+/* HORARIOS */
+.hours-table{width:100%;border-collapse:collapse}
+.hours-table tr td{padding:6px 4px;vertical-align:middle}
+.hours-day{font-size:14px;font-weight:600;padding:6px 10px 6px 8px!important;min-width:90px}
+.hours-sep{text-align:center;color:var(--ink-soft);padding:0 4px!important}
+.time-input{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--ink);font-family:inherit;width:90px}
+.time-input:focus{outline:none;border-color:var(--brand)}
 
 /* PEDIDOS dashboard */
 .orders-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}

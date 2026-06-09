@@ -10,7 +10,8 @@
 
 const express = require("express");
 const QRCode = require("qrcode");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
+const { updateStatus } = require("../services/orderService");
 const products = require("../repositories/products.repo");
 const settings = require("../repositories/settings.repo");
 const ordersRepo = require("../repositories/orders.repo");
@@ -20,8 +21,9 @@ const waState = require("../services/whatsappState");
 const router = express.Router();
 router.use(requireAuth);
 
-// Whitelist de settings editables desde el panel
-const EDITABLE_SETTINGS = new Set(["brand_name", "kitchen_number", "currency", "locale", "timezone", "dispatch_number"]);
+// Settings: whitelist de claves editables y cuáles van como JSON
+const EDITABLE_SETTINGS = new Set(["brand_name", "kitchen_number", "currency", "locale", "timezone", "dispatch_number", "business_hours"]);
+const JSON_SETTINGS = new Set(["business_hours"]);
 
 function slugify(text) {
   return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -43,7 +45,7 @@ function uploadSingle(field) {
 
 router.get("/categories", (_req, res) => res.json(products.listAllCategories()));
 
-router.post("/categories", (req, res) => {
+router.post("/categories", requireAdmin, (req, res) => {
   const { name, emoji, sort_order, enabled } = req.body || {};
   if (!name) return res.status(400).json({ error: "nombre requerido" });
   try {
@@ -56,14 +58,14 @@ router.post("/categories", (req, res) => {
   }
 });
 
-router.put("/categories/:id", (req, res) => {
+router.put("/categories/:id", requireAdmin, (req, res) => {
   const { name, emoji, sort_order, enabled } = req.body || {};
   if (!name) return res.status(400).json({ error: "nombre requerido" });
   products.updateCategory(Number(req.params.id), { name, emoji, sort_order, enabled: enabled !== false });
   res.json({ ok: true });
 });
 
-router.delete("/categories/:id", (req, res) => {
+router.delete("/categories/:id", requireAdmin, (req, res) => {
   products.deleteCategory(Number(req.params.id));
   res.json({ ok: true });
 });
@@ -72,7 +74,7 @@ router.delete("/categories/:id", (req, res) => {
 
 router.get("/products", (_req, res) => res.json(products.listAllProducts()));
 
-router.post("/products", (req, res) => {
+router.post("/products", requireAdmin, (req, res) => {
   const { category_id, name, description, available, sort_order } = req.body || {};
   const price_cop = toIntPrice(req.body.price_cop);
   if (!name) return res.status(400).json({ error: "nombre requerido" });
@@ -86,7 +88,7 @@ router.post("/products", (req, res) => {
   res.json({ ok: true, id });
 });
 
-router.put("/products/:id", (req, res) => {
+router.put("/products/:id", requireAdmin, (req, res) => {
   const { category_id, name, description, available, sort_order } = req.body || {};
   const price_cop = toIntPrice(req.body.price_cop);
   if (!name) return res.status(400).json({ error: "nombre requerido" });
@@ -100,14 +102,14 @@ router.put("/products/:id", (req, res) => {
   res.json({ ok: true });
 });
 
-router.delete("/products/:id", (req, res) => {
+router.delete("/products/:id", requireAdmin, (req, res) => {
   const existing = products.getProductById(Number(req.params.id));
   products.deleteProduct(Number(req.params.id));
   if (existing && existing.image) removeByPublicPath(existing.image);
   res.json({ ok: true });
 });
 
-router.post("/products/:id/image", uploadSingle("image"), async (req, res) => {
+router.post("/products/:id/image", requireAdmin, uploadSingle("image"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "archivo 'image' requerido" });
   const id = Number(req.params.id);
   const current = products.listAllProducts().find(p => p.id === id);
@@ -121,13 +123,22 @@ router.post("/products/:id/image", uploadSingle("image"), async (req, res) => {
 
 // ─────────────── Settings ───────────────
 
-router.get("/settings", (_req, res) => res.json(settings.getAllSettings()));
+router.get("/settings", (_req, res) => {
+  const s = settings.getAllSettings();
+  for (const key of JSON_SETTINGS) {
+    if (s[key]) try { s[key] = JSON.parse(s[key]); } catch { delete s[key]; }
+  }
+  res.json(s);
+});
 
-router.put("/settings", (req, res) => {
+router.put("/settings", requireAdmin, (req, res) => {
   const body = req.body || {};
   const applied = {};
   for (const [k, v] of Object.entries(body)) {
-    if (EDITABLE_SETTINGS.has(k)) { settings.setSetting(k, String(v)); applied[k] = String(v); }
+    if (!EDITABLE_SETTINGS.has(k)) continue;
+    const val = JSON_SETTINGS.has(k) ? JSON.stringify(v) : String(v);
+    settings.setSetting(k, val);
+    applied[k] = v;
   }
   res.json({ ok: true, applied });
 });
@@ -136,7 +147,7 @@ router.put("/settings", (req, res) => {
 
 router.get("/payments", (_req, res) => res.json(settings.listPaymentMethods()));
 
-router.put("/payments/:id", (req, res) => {
+router.put("/payments/:id", requireAdmin, (req, res) => {
   const { label, enabled } = req.body || {};
   const pm = settings.getPaymentMethodById(Number(req.params.id));
   if (!pm) return res.status(404).json({ error: "método de pago inexistente" });
@@ -144,7 +155,7 @@ router.put("/payments/:id", (req, res) => {
   res.json({ ok: true });
 });
 
-router.post("/payments/:id/qr", uploadSingle("qr"), async (req, res) => {
+router.post("/payments/:id/qr", requireAdmin, uploadSingle("qr"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "archivo 'qr' requerido" });
   const pm = settings.getPaymentMethodById(Number(req.params.id));
   if (!pm) return res.status(404).json({ error: "método de pago inexistente" });
@@ -163,6 +174,43 @@ router.get("/orders/counts", (_req, res) => {
 
 router.get("/orders/active", (_req, res) => {
   res.json(ordersRepo.getActiveOrdersSummary());
+});
+
+router.put("/orders/:id/status", async (req, res) => {
+  const { status } = req.body || {};
+  if (!status) return res.status(400).json({ error: "status requerido" });
+  try {
+    const order = await updateStatus(Number(req.params.id), status);
+    res.json({ ok: true, id: order.id, status: order.status });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get("/orders/export", (req, res) => {
+  const period = req.query.period === "month" ? "month" : "day";
+  const orders = ordersRepo.getOrdersForExport(period);
+
+  const header = ["Ticket", "Fecha", "Canal", "Cliente", "Telefono", "Direccion", "Pago", "Total COP", "Estado"].join(",");
+  const rows = orders.map(o => [
+    o.ticket_number,
+    `"${(o.created_at || "").replace(/"/g, '""')}"`,
+    o.source,
+    `"${(o.customer_name || "").replace(/"/g, '""')}"`,
+    o.customer_phone || "",
+    `"${(o.address || "").replace(/"/g, '""')}"`,
+    o.payment_method || "",
+    o.total_cop,
+    o.status,
+  ].join(","));
+
+  const csv = [header, ...rows].join("\r\n");
+  const date = new Date().toISOString().slice(0, 10);
+  const label = period === "month" ? "mes" : "hoy";
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="ventas-${label}-${date}.csv"`);
+  res.send("﻿" + csv); // BOM para que Excel lo abra correctamente
 });
 
 // ─────────────── WhatsApp ───────────────

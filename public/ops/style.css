@@ -177,6 +177,19 @@ main { max-width:1160px; margin:0 auto; padding:28px 20px; display:flex; flex-di
 .model-key-hint { font-size:12px; color:var(--soft); margin-top:2px }
 .modal-actions { display:flex; gap:10px; justify-content:flex-end; padding-top:4px }
 
+/* ── USERS TABLE ────────────────────────────────────── */
+.users-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.users-table th{text-align:left;padding:11px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--soft);border-bottom:1px solid var(--line)}
+.users-table td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.users-table tr:last-child td{border-bottom:none}
+.user-actions{display:flex;gap:6px;justify-content:flex-end}
+.btn-sec.btn-sm{flex:none;padding:5px 10px;font-size:12px}
+.btn-sec.danger{color:var(--danger);border-color:#fca5a5}
+.section-head{justify-content:space-between}
+.ubadge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.ubadge-admin{background:#dbeafe;color:#1e40af}
+.ubadge-op{background:#f3f4f6;color:#374151}
+
 /* ── TOAST ──────────────────────────────────────────── */
 .toast {
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%);

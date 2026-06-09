@@ -11,6 +11,7 @@ const { parseKitchenKeyword, kitchenInstructions } = require("../../src/services
 const { setWaDispatchSender } = require("../dispatchNotifier");
 const settingsRepo = require("../../src/repositories/settings.repo");
 const waState = require("../../src/services/whatsappState");
+const { isOpen, closedMessage } = require("../../src/services/businessHours");
 
 function getDispatchNumber() {
   try { return settingsRepo.getSetting("dispatch_number") || process.env.DISPATCH_NUMBER; }
@@ -143,6 +144,11 @@ async function handleKitchenReply(msg) {
 
 // ─────────────── Flujo del CLIENTE ───────────────
 async function handleCustomerMessage(msg, phone) {
+  if (!isOpen()) {
+    await msg.reply(closedMessage()).catch(() => {});
+    return;
+  }
+
   const session = getSession(phone);
 
   // Notas de voz

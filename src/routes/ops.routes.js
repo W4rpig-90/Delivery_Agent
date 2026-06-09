@@ -9,6 +9,8 @@ const fs      = require("fs");
 const path    = require("path");
 const os      = require("os");
 const crypto  = require("crypto");
+const usersRepo    = require("../src/repositories/users.repo");
+const { hashPassword } = require("../src/utils/password");
 
 const router = express.Router();
 
@@ -256,5 +258,47 @@ const AI_MODELS = [
 ];
 
 router.get("/models", requireOpsAuth, (_req, res) => res.json(AI_MODELS));
+
+// ─── Gestión de usuarios del panel admin ───────────────────────────────────
+
+router.get("/users", requireOpsAuth, (_req, res) => {
+  res.json(usersRepo.listUsers());
+});
+
+router.post("/users", requireOpsAuth, (req, res) => {
+  const { username, password, role } = req.body || {};
+  if (!username || !password) return res.status(400).json({ error: "usuario y contraseña requeridos" });
+  if (!["admin", "operator"].includes(role)) return res.status(400).json({ error: "rol inválido (admin u operator)" });
+  if (String(password).length < 6) return res.status(400).json({ error: "contraseña mínimo 6 caracteres" });
+  if (usersRepo.userExists(String(username).trim())) return res.status(409).json({ error: "ese nombre de usuario ya existe" });
+  const id = usersRepo.createUser({ username: String(username).trim(), passwordHash: hashPassword(String(password)), role });
+  res.json({ ok: true, id });
+});
+
+router.put("/users/:id", requireOpsAuth, (req, res) => {
+  const { password, role } = req.body || {};
+  const id = Number(req.params.id);
+  if (role !== undefined && !["admin", "operator"].includes(role)) {
+    return res.status(400).json({ error: "rol inválido" });
+  }
+  if (password !== undefined && password !== "") {
+    if (String(password).length < 6) return res.status(400).json({ error: "contraseña mínimo 6 caracteres" });
+    usersRepo.updatePassword(id, hashPassword(String(password)));
+  }
+  if (role) usersRepo.setUserRole(id, role);
+  res.json({ ok: true });
+});
+
+router.delete("/users/:id", requireOpsAuth, (req, res) => {
+  const all = usersRepo.listUsers();
+  const id = Number(req.params.id);
+  const admins = all.filter(u => u.role === "admin");
+  const target = all.find(u => u.id === id);
+  if (target?.role === "admin" && admins.length <= 1) {
+    return res.status(400).json({ error: "no se puede eliminar el último administrador" });
+  }
+  usersRepo.deleteUser(id);
+  res.json({ ok: true });
+});
 
 module.exports = router;

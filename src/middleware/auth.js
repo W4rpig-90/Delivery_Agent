@@ -76,6 +76,14 @@ function requireAuth(req, res, next) {
   next();
 }
 
+/** Middleware: exige rol 'admin'; si no, 403. Debe usarse después de requireAuth. */
+function requireAdmin(req, res, next) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "requiere permisos de administrador" });
+  }
+  next();
+}
+
 module.exports = {
   COOKIE_NAME,
   createSessionToken,
@@ -83,5 +91,6 @@ module.exports = {
   setSessionCookie,
   clearSessionCookie,
   requireAuth,
+  requireAdmin,
   parseCookies
 };

@@ -88,7 +88,7 @@ function stopPollers() {
 }
 
 async function loadAll() {
-  await Promise.all([loadServer(), loadModels(), loadContainersAndStats()]);
+  await Promise.all([loadServer(), loadModels(), loadContainersAndStats(), loadUsers()]);
 }
 
 async function loadModels() {
@@ -463,21 +463,121 @@ async function restartBot(name) {
   } catch (ex) { toast(ex.message, true); }
 }
 
+// ─── Usuarios del panel Admin ─────────────────────────
+
+async function loadUsers() {
+  const el = $("#users-list");
+  try {
+    const users = await api("GET", "/users");
+    if (!users.length) {
+      el.innerHTML = '<div class="stat-placeholder">No hay usuarios. Crea el primero.</div>';
+      return;
+    }
+    el.innerHTML = `
+      <table class="users-table">
+        <thead><tr><th>Usuario</th><th>Rol</th><th></th></tr></thead>
+        <tbody>${users.map(u => `<tr>
+          <td><strong>${esc(u.username)}</strong></td>
+          <td><span class="ubadge ${u.role === "admin" ? "ubadge-admin" : "ubadge-op"}">
+            ${u.role === "admin" ? "Administrador" : "Operador"}
+          </span></td>
+          <td class="user-actions">
+            <button class="btn-sec" data-edit-user="${u.id}"
+              data-username="${esc(u.username)}" data-role="${esc(u.role)}">Editar</button>
+            <button class="btn-sec danger" data-del-user="${u.id}"
+              data-username="${esc(u.username)}">Borrar</button>
+          </td>
+        </tr>`).join("")}</tbody>
+      </table>`;
+  } catch (ex) {
+    el.innerHTML = `<div class="stat-placeholder">Error: ${esc(ex.message)}</div>`;
+  }
+}
+
+function openNewUserModal() {
+  openModal("Nuevo usuario", `
+    <label>Nombre de usuario<input id="f-u-name" placeholder="operador1" autocomplete="off" /></label>
+    <label>Contraseña (mín. 6 caracteres)<input id="f-u-pass" type="password" autocomplete="new-password" /></label>
+    <label>Rol
+      <select id="f-u-role">
+        <option value="operator">Operador — gestión de pedidos + WhatsApp</option>
+        <option value="admin">Administrador — acceso completo</option>
+      </select>
+    </label>
+    <div class="modal-actions">
+      <button class="btn-sec" data-action="close-modal">Cancelar</button>
+      <button class="btn-primary" data-action="save-new-user">Crear usuario</button>
+    </div>`);
+}
+
+function openEditUserModal(id, username, role) {
+  openModal(`Editar: ${username}`, `
+    <p style="font-size:13px;color:#6b6b70;margin-bottom:12px">Deja la contraseña vacía para no cambiarla.</p>
+    <label>Nueva contraseña<input id="f-u-pass" type="password" autocomplete="new-password" placeholder="(sin cambios)" /></label>
+    <label>Rol
+      <select id="f-u-role">
+        <option value="operator" ${role === "operator" ? "selected" : ""}>Operador — gestión de pedidos + WhatsApp</option>
+        <option value="admin" ${role === "admin" ? "selected" : ""}>Administrador — acceso completo</option>
+      </select>
+    </label>
+    <div class="modal-actions">
+      <button class="btn-sec" data-action="close-modal">Cancelar</button>
+      <button class="btn-primary" data-save-user="${id}">Guardar cambios</button>
+    </div>`);
+}
+
+async function createUser() {
+  const username = $("#f-u-name")?.value?.trim();
+  const password = $("#f-u-pass")?.value;
+  const role     = $("#f-u-role")?.value;
+  if (!username || !password) { toast("Usuario y contraseña requeridos", true); return; }
+  try {
+    await api("POST", "/users", { username, password, role });
+    closeModal();
+    toast(`Usuario "${username}" creado ✓`);
+    loadUsers();
+  } catch (ex) { toast(ex.message, true); }
+}
+
+async function saveUser(id) {
+  const password = $("#f-u-pass")?.value;
+  const role     = $("#f-u-role")?.value;
+  const body = { role };
+  if (password) body.password = password;
+  try {
+    await api("PUT", `/users/${id}`, body);
+    closeModal();
+    toast("Usuario actualizado ✓");
+    loadUsers();
+  } catch (ex) { toast(ex.message, true); }
+}
+
+async function deleteUser(id, username) {
+  if (!confirm(`¿Eliminar al usuario "${username}"? Esta acción no se puede deshacer.`)) return;
+  try {
+    await api("DELETE", `/users/${id}`);
+    toast(`"${username}" eliminado`);
+    loadUsers();
+  } catch (ex) { toast(ex.message, true); }
+}
+
 // ─── Event delegation ─────────────────────────────────
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save]");
+  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save],[data-save-user],[data-edit-user],[data-del-user]");
   if (!t) return;
   const d = t.dataset;
 
-  if (d.action === "logout") {
-    await api("POST", "/logout").catch(() => {});
-    showLogin();
-    return;
-  }
-  if (d.action === "close-modal") return closeModal();
-  if (d.cfg)     return openConfig(d.cfg);
-  if (d.restart) return restartBot(d.restart);
-  if (d.save)    return saveConfig(d.save);
+  if (d.action === "logout")        { await api("POST", "/logout").catch(() => {}); showLogin(); return; }
+  if (d.action === "close-modal")   return closeModal();
+  if (d.action === "new-user")      return openNewUserModal();
+  if (d.action === "save-new-user") return createUser();
+
+  if (d.cfg)      return openConfig(d.cfg);
+  if (d.restart)  return restartBot(d.restart);
+  if (d.save)     return saveConfig(d.save);
+  if (d.saveUser) return saveUser(d.saveUser);
+  if (d.editUser) return openEditUserModal(d.editUser, d.username, d.role);
+  if (d.delUser)  return deleteUser(d.delUser, d.username);
 });
 
 checkSession();

@@ -165,6 +165,21 @@ function getOrderCountsByStatus() {
   };
 }
 
+/** Pedidos del día o del mes para exportar a CSV (hora Bogotá). */
+function getOrdersForExport(period) {
+  const db = getDB();
+  const filter = period === "month"
+    ? "strftime('%Y-%m', created_at) = strftime('%Y-%m', datetime('now','-5 hours'))"
+    : "date(created_at) = date(datetime('now','-5 hours'))";
+  return db.prepare(`
+    SELECT ticket_number, created_at, source, customer_name, customer_phone,
+           address, payment_method, total_cop, status
+    FROM orders
+    WHERE ${filter}
+    ORDER BY id DESC
+  `).all();
+}
+
 /** Resumen de pedidos activos para el dashboard de /admin. */
 function getActiveOrdersSummary() {
   const db = getDB();
@@ -193,4 +208,5 @@ module.exports = {
   markPrinted,
   getOrderCountsByStatus,
   getActiveOrdersSummary,
+  getOrdersForExport,
 };

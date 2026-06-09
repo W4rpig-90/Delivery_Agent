@@ -33,6 +33,7 @@
       </nav>
       <span class="topbar-right">
         <span id="who" class="muted"></span>
+        <span id="role-badge" class="badge off hidden">Operador</span>
         <button class="link" data-action="change-pass">Contraseña</button>
         <button class="link" data-action="logout">Salir</button>
       </span>
@@ -43,7 +44,11 @@
       <section id="tab-orders" class="tab-panel">
         <div class="panel-head">
           <h2>Pedidos activos</h2>
-          <button class="secondary" data-action="refresh-orders">↻ Actualizar</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="secondary" data-action="export-day">↓ Exportar hoy</button>
+            <button class="secondary" data-action="export-month">↓ Exportar mes</button>
+            <button class="secondary" data-action="refresh-orders">↻ Actualizar</button>
+          </div>
         </div>
         <div class="orders-stats">
           <div class="stat-card warn">
@@ -98,13 +103,27 @@
       <!-- AJUSTES -->
       <section id="tab-settings" class="tab-panel">
         <div class="panel-head"><h2>Ajustes generales</h2></div>
-        <form id="settings-form" class="form-card">
-          <label>Nombre del negocio<input name="brand_name" type="text" /></label>
-          <label>Número de cocina (WhatsApp)<input name="kitchen_number" type="text" placeholder="573104859728" /></label>
-          <label>Moneda<input name="currency" type="text" maxlength="3" /></label>
-          <button class="primary" type="submit">Guardar</button>
-          <span id="settings-saved" class="ok hidden">Guardado ✓</span>
-        </form>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+          <form id="settings-form" class="form-card">
+            <label>Nombre del negocio<input name="brand_name" type="text" /></label>
+            <label>Número de cocina (WhatsApp)<input name="kitchen_number" type="text" placeholder="573104859728" /></label>
+            <label>Moneda<input name="currency" type="text" maxlength="3" /></label>
+            <button class="primary" type="submit">Guardar</button>
+            <span id="settings-saved" class="ok hidden">Guardado ✓</span>
+          </form>
+
+          <div class="form-card">
+            <h3 class="card-title">Horarios de atención</h3>
+            <p class="field-hint" style="margin-bottom:14px">Fuera del horario configurado el bot responderá que el local está cerrado.</p>
+            <table class="hours-table">
+              <tbody id="hours-tbody"></tbody>
+            </table>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+              <button class="primary" data-action="save-hours">Guardar horarios</button>
+              <span id="hours-saved" class="ok hidden">Guardado ✓</span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- WHATSAPP -->
