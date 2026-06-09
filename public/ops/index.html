@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ops · Delivery Agent</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-view" class="login-wrap">
+    <form id="login-form" class="login-card">
+      <div class="login-icon">🖥️</div>
+      <h1>Delivery Agent</h1>
+      <p class="login-sub">Panel de operaciones</p>
+      <input id="login-pass" type="password" placeholder="Contraseña de operador" autocomplete="current-password" required />
+      <button type="submit">Entrar</button>
+      <div id="login-error" class="err-msg hidden"></div>
+    </form>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="app-view" class="hidden">
+    <header class="topbar">
+      <span class="topbar-brand">
+        <span class="topbar-icon">🖥️</span>
+        Delivery Agent <em>Ops</em>
+      </span>
+      <span class="topbar-right">
+        <span class="topbar-host">86.48.29.32</span>
+        <button class="topbar-logout" data-action="logout">Cerrar sesión</button>
+      </span>
+    </header>
+
+    <main>
+
+      <!-- Server Stats -->
+      <section class="dash-section">
+        <div class="section-head">
+          <h2>Servidor</h2>
+          <span id="stats-ts" class="ts-label"></span>
+        </div>
+        <div id="stats-grid" class="stats-grid">
+          <div class="stat-placeholder">Cargando…</div>
+        </div>
+      </section>
+
+      <!-- Bot Instances -->
+      <section class="dash-section">
+        <div class="section-head">
+          <h2>Instancias de Bot</h2>
+          <span id="bots-ts" class="ts-label"></span>
+        </div>
+        <div id="bots-grid" class="bots-grid">
+          <div class="stat-placeholder">Cargando…</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL genérico -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-title"></h3>
+        <button class="modal-close" data-action="close-modal">×</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>

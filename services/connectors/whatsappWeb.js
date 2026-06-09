@@ -1,6 +1,6 @@
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
-const { chat, chatWithAudio } = require("../gemini");
+const { chat, chatWithAudio } = require("../ai");
 const { getSession, addToHistory, closeSession } = require("../sessionManager");
 const { isOrderConfirmed, buildDispatchTicket, extractDeliveryData, extractMarkersFromResponse } = require("../orderProcessor");
 const { parseTotalFromSummary } = require("../database");
