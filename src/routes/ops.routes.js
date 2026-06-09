@@ -9,8 +9,8 @@ const fs      = require("fs");
 const path    = require("path");
 const os      = require("os");
 const crypto  = require("crypto");
-const usersRepo    = require("../src/repositories/users.repo");
-const { hashPassword } = require("../src/utils/password");
+const usersRepo    = require("../repositories/users.repo");
+const { hashPassword } = require("../utils/password");
 
 const router = express.Router();
 
