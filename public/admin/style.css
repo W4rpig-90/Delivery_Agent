@@ -66,19 +66,6 @@ main{max-width:1000px;margin:0 auto;padding:24px 20px}
 #modal-body{padding:20px;display:flex;flex-direction:column;gap:14px}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
 
-/* FLEET tab */
-.fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.fleet-loading{color:var(--ink-soft);font-size:14px;padding:24px 0}
-.fleet-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:12px}
-.fleet-card-head{display:flex;align-items:center;gap:10px}
-.fleet-avatar{width:42px;height:42px;border-radius:10px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.fleet-name{font-weight:700;font-size:15px;line-height:1.2}
-.fleet-sub{font-size:12px;color:var(--ink-soft)}
-.fleet-meta{font-size:12px;color:var(--ink-soft);display:flex;gap:8px;flex-wrap:wrap}
-.fleet-actions{display:flex;gap:8px}
-.fleet-actions .primary{flex:1;padding:8px;font-size:13px}
-.fleet-actions .btn-sm{flex:1;text-align:center}
-
 /* Config modal sections */
 .cfg-section{margin-bottom:20px}
 .cfg-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:12px}

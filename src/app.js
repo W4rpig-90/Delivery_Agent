@@ -10,8 +10,7 @@ const kioskRoutes = require("./routes/kiosk.routes");
 const authRoutes = require("./routes/auth.routes");
 const adminRoutes = require("./routes/admin.routes");
 const kdsRoutes = require("./routes/kds.routes");
-const fleetRoutes = require("./routes/fleet.routes");
-const opsRoutes   = require("./routes/ops.routes");
+const opsRoutes = require("./routes/ops.routes");
 const wsHub = require("./ws/hub");
 const { UPLOADS_DIR } = require("./services/uploadService");
 
@@ -34,8 +33,7 @@ function buildApp() {
   app.use("/api/admin", authRoutes);   // /login, /logout, /me, /change-password (público)
   app.use("/api/admin", adminRoutes);  // CRUD (requireAuth)
   app.use("/api/kds", kdsRoutes);      // tablero de cocina (requireAuth)
-  app.use("/api/admin/fleet", fleetRoutes);  // fleet legacy (puede eliminarse después)
-  app.use("/api/ops",        opsRoutes);    // panel de operador (OPS_PASSWORD)
+  app.use("/api/ops", opsRoutes);  // panel de operador (OPS_PASSWORD)
 
   app.get("/", (_req, res) => res.redirect("/kiosko"));
   app.get("/health", (_req, res) =>

@@ -13,5 +13,22 @@ pedidos.log
 # Imágenes subidas desde el panel admin
 data/uploads/
 
-# macOS
+# macOS / Windows
 .DS_Store
+Thumbs.db
+
+# Archivos de debug y backup generados durante desarrollo
+*.logged
+*.fixed
+*.bypass
+*.debug
+*.restored
+*.patch
+scratch/
+check_data.js
+inspect_db.js
+create_admin*.js
+reset_admin.js
+fix_admin*.js
+test_admin*.js
+*_panel.png
