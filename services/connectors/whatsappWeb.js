@@ -8,8 +8,13 @@ const { parseTotalFromSummary } = require("../database");
 const ordersRepo = require("../../src/repositories/orders.repo");
 const { createWhatsappOrder, updateStatus, setStatusNotifier } = require("../../src/services/orderService");
 const { parseKitchenKeyword, kitchenInstructions } = require("../../src/services/orderStatusMessages");
+const settingsRepo = require("../../src/repositories/settings.repo");
+const waState = require("../../src/services/whatsappState");
 
-const DISPATCH_NUMBER = process.env.DISPATCH_NUMBER;
+function getDispatchNumber() {
+  try { return settingsRepo.getSetting("dispatch_number") || process.env.DISPATCH_NUMBER; }
+  catch { return process.env.DISPATCH_NUMBER; }
+}
 
 const STATUS_LABEL = {
   accepted: "ACEPTADO ✅", cooking: "COCINANDO 👨‍🍳", ready: "LISTO 🎉",
@@ -37,7 +42,8 @@ function initialize() {
   console.log("Iniciando motor de WhatsApp Web...");
   console.log("Cargando navegador Puppeteer... (esto puede tardar unos segundos)\n");
 
-  // El cliente final recibe avisos cuando la cocina cambia el estado de su pedido.
+  waState.setState({ status: "initializing", qr: null });
+
   setStatusNotifier(async (order, _status, message) => {
     if (!order.customer_phone || !message) return;
     await client.sendMessage(`${order.customer_phone}@c.us`, message);
@@ -46,12 +52,25 @@ function initialize() {
   client.on("qr", (qr) => {
     console.log("\n[WhatsApp Web] Escaneá el siguiente código QR con tu teléfono:\n");
     qrcode.generate(qr, { small: true });
+    waState.setState({ status: "qr", qr });
   });
-  client.on("loading_screen", (p, m) => console.log(`[WhatsApp Web] Cargando: ${p}% - ${m}`));
-  client.on("authenticated", () => console.log("[WhatsApp Web] Sesión recuperada ✓"));
+  client.on("loading_screen", (p, m) => {
+    console.log(`[WhatsApp Web] Cargando: ${p}% - ${m}`);
+    waState.setState({ status: "initializing", qr: null });
+  });
+  client.on("authenticated", () => {
+    console.log("[WhatsApp Web] Sesión recuperada ✓");
+    waState.setState({ status: "connecting", qr: null });
+  });
   client.on("ready", () => {
+    const dn = getDispatchNumber();
     console.log(`\n[WhatsApp Web] Bot conectado y escuchando ✓`);
-    console.log(`[Cocina] Despacho: ${DISPATCH_NUMBER || "(no configurado)"}\n`);
+    console.log(`[Cocina] Despacho: ${dn || "(no configurado)"}\n`);
+    waState.setState({ status: "ready", qr: null });
+  });
+  client.on("disconnected", (reason) => {
+    console.log(`[WhatsApp Web] Desconectado: ${reason}`);
+    waState.setState({ status: "disconnected", qr: null });
   });
   client.on("message", handleMessage);
   client.initialize();
@@ -63,6 +82,7 @@ async function handleMessage(msg) {
   const phone = msg.from.replace(/@[^@]+$/, "");
 
   // ── Respuestas de la COCINA (despacho) ──
+  const DISPATCH_NUMBER = getDispatchNumber();
   if (DISPATCH_NUMBER && phone === DISPATCH_NUMBER) {
     await handleKitchenReply(msg);
     return;
@@ -177,10 +197,11 @@ async function handleOrderConfirmed(phone, session, botResponse = "") {
   ordersRepo.setTicketText(order.id, ticketText);
 
   // 3. Enviar a la cocina con instrucciones y guardar el id del mensaje (para respuestas citadas)
-  if (DISPATCH_NUMBER) {
+  const dispatchNum = getDispatchNumber();
+  if (dispatchNum) {
     try {
       const sent = await client.sendMessage(
-        `${DISPATCH_NUMBER}@c.us`,
+        `${dispatchNum}@c.us`,
         ticketText + "\n" + kitchenInstructions(order.ticket_number)
       );
       if (sent?.id?._serialized) ordersRepo.setWaMessageId(order.id, sent.id._serialized);

@@ -28,6 +28,7 @@
         <button class="tab" data-tab="categories">Categorías</button>
         <button class="tab" data-tab="payments">Pagos</button>
         <button class="tab" data-tab="settings">Ajustes</button>
+        <button class="tab" data-tab="whatsapp">WhatsApp</button>
       </nav>
       <span class="topbar-right">
         <span id="who" class="muted"></span>
@@ -80,6 +81,40 @@
           <button class="primary" type="submit">Guardar</button>
           <span id="settings-saved" class="ok hidden">Guardado ✓</span>
         </form>
+      </section>
+      <!-- WHATSAPP -->
+      <section id="tab-whatsapp" class="tab-panel">
+        <div class="panel-head"><h2>WhatsApp</h2></div>
+
+        <div class="wa-grid">
+          <!-- Configuración -->
+          <div class="form-card">
+            <h3 class="card-title">Configuración</h3>
+            <form id="whatsapp-form">
+              <label>Número de despacho (cocina)
+                <input name="dispatch_number" type="text" placeholder="573104859728" />
+                <span class="field-hint">Número al que se envían los pedidos. Incluye código de país sin +</span>
+              </label>
+              <button class="primary" type="submit">Guardar número</button>
+              <span id="wa-saved" class="ok hidden">Guardado ✓</span>
+            </form>
+          </div>
+
+          <!-- Estado y QR -->
+          <div class="form-card">
+            <h3 class="card-title">Conexión</h3>
+            <div class="wa-status-row">
+              <span class="muted">Estado:</span>
+              <span id="wa-status-badge" class="badge off">Cargando…</span>
+            </div>
+            <div id="wa-qr-wrap" class="wa-qr-wrap hidden">
+              <p class="muted" style="margin-bottom:10px">Abrí WhatsApp → Dispositivos vinculados → Escanear QR</p>
+              <img id="wa-qr-img" src="" alt="QR WhatsApp" class="wa-qr-img" />
+            </div>
+            <p id="wa-ready-msg" class="ok hidden">Bot conectado y escuchando ✓</p>
+            <p id="wa-disabled-msg" class="muted hidden">WhatsApp local desactivado en esta instalación.<br>Usá n8n cloud para notificaciones.</p>
+          </div>
+        </div>
       </section>
     </main>
   </div>

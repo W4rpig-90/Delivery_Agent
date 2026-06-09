@@ -69,7 +69,7 @@ $("#login-form").addEventListener("submit", async e => {
 
 // ───── Carga general ─────
 async function loadAll() {
-  await Promise.all([loadCategories(), loadProducts(), loadPayments(), loadSettings()]);
+  await Promise.all([loadCategories(), loadProducts(), loadPayments(), loadSettings(), loadWhatsapp()]);
 }
 
 // ───── Categorías ─────
@@ -226,6 +226,61 @@ $("#settings-form").addEventListener("submit", async e => {
     $("#settings-saved").classList.remove("hidden");
     setTimeout(() => $("#settings-saved").classList.add("hidden"), 2000);
     await loadSettings();
+  } catch (ex) { toast(ex.message, true); }
+});
+
+// ───── WhatsApp ─────
+let _waEvtSource = null;
+
+async function loadWhatsapp() {
+  const s = await api("GET", "/settings");
+  const f = $("#whatsapp-form");
+  f.dispatch_number.value = s.dispatch_number || "";
+  startWaEvents();
+}
+
+function startWaEvents() {
+  if (_waEvtSource) { _waEvtSource.close(); _waEvtSource = null; }
+  _waEvtSource = new EventSource("/api/admin/whatsapp/events");
+  _waEvtSource.onmessage = e => renderWaState(JSON.parse(e.data));
+  _waEvtSource.onerror = () => { _waEvtSource.close(); setTimeout(startWaEvents, 5000); };
+}
+
+const WA_LABELS = {
+  disabled: ["Desactivado", "off"],
+  initializing: ["Iniciando…", "warn"],
+  qr: ["Esperando escaneo QR", "warn"],
+  connecting: ["Conectando…", "warn"],
+  ready: ["Conectado ✓", "on"],
+  disconnected: ["Desconectado", "off"],
+};
+
+function renderWaState({ status, qr_data_url }) {
+  const [label, cls] = WA_LABELS[status] || [status, "off"];
+  const badge = $("#wa-status-badge");
+  badge.textContent = label;
+  badge.className = `badge ${cls}`;
+
+  const qrWrap = $("#wa-qr-wrap");
+  const readyMsg = $("#wa-ready-msg");
+  const disabledMsg = $("#wa-disabled-msg");
+
+  qrWrap.classList.toggle("hidden", status !== "qr");
+  readyMsg.classList.toggle("hidden", status !== "ready");
+  disabledMsg.classList.toggle("hidden", status !== "disabled");
+
+  if (status === "qr" && qr_data_url) {
+    $("#wa-qr-img").src = qr_data_url;
+  }
+}
+
+$("#whatsapp-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  try {
+    await api("PUT", "/settings", { dispatch_number: f.dispatch_number.value.trim() });
+    $("#wa-saved").classList.remove("hidden");
+    setTimeout(() => $("#wa-saved").classList.add("hidden"), 2000);
   } catch (ex) { toast(ex.message, true); }
 });
 

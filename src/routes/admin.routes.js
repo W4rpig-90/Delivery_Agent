@@ -9,16 +9,18 @@
  */
 
 const express = require("express");
+const QRCode = require("qrcode");
 const { requireAuth } = require("../middleware/auth");
 const products = require("../repositories/products.repo");
 const settings = require("../repositories/settings.repo");
 const { upload, processAndSave, removeByPublicPath } = require("../services/uploadService");
+const waState = require("../services/whatsappState");
 
 const router = express.Router();
 router.use(requireAuth);
 
 // Whitelist de settings editables desde el panel
-const EDITABLE_SETTINGS = new Set(["brand_name", "kitchen_number", "currency", "locale", "timezone"]);
+const EDITABLE_SETTINGS = new Set(["brand_name", "kitchen_number", "currency", "locale", "timezone", "dispatch_number"]);
 
 function slugify(text) {
   return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -150,6 +152,38 @@ router.post("/payments/:id/qr", uploadSingle("qr"), async (req, res) => {
   if (pm.qr_image) removeByPublicPath(pm.qr_image);
   settings.setPaymentQr(pm.id, publicPath);
   res.json({ ok: true, qr_image: publicPath });
+});
+
+// ─────────────── WhatsApp ───────────────
+
+router.get("/whatsapp/status", async (_req, res) => {
+  const state = waState.getState();
+  let qr_data_url = null;
+  if (state.qr) {
+    try { qr_data_url = await QRCode.toDataURL(state.qr, { margin: 2, scale: 6 }); } catch {}
+  }
+  res.json({ status: state.status, qr_data_url });
+});
+
+router.get("/whatsapp/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  async function send(state) {
+    let qr_data_url = null;
+    if (state.qr) {
+      try { qr_data_url = await QRCode.toDataURL(state.qr, { margin: 2, scale: 6 }); } catch {}
+    }
+    if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ status: state.status, qr_data_url })}\n\n`);
+    }
+  }
+
+  send(waState.getState());
+  const unsub = waState.onChange(send);
+  req.on("close", unsub);
 });
 
 module.exports = router;
