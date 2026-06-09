@@ -59,7 +59,7 @@ function showLogin() {
   $("#login-view").classList.remove("hidden");
 }
 function showApp(me) {
-  _currentRole = me.role || "admin";
+  _currentRole = me.role === "operator" ? "operator" : "admin";
   $("#login-view").classList.add("hidden");
   $("#app-view").classList.remove("hidden");
   $("#who").textContent = me.username;

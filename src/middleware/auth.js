@@ -24,7 +24,8 @@ function sign(payload) {
 
 function createSessionToken(user) {
   const exp = Date.now() + MAX_AGE_MS;
-  const payload = `${user.username}|${user.role}|${exp}`;
+  const role = user.role === "operator" ? "operator" : "admin"; // normaliza null/undefined a "admin"
+  const payload = `${user.username}|${role}|${exp}`;
   const body = Buffer.from(payload).toString("base64url");
   return `${body}.${sign(payload)}`;
 }
