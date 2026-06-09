@@ -230,20 +230,27 @@ $("#settings-form").addEventListener("submit", async e => {
 });
 
 // ───── WhatsApp ─────
-let _waEvtSource = null;
+let _waPoller = null;
 
 async function loadWhatsapp() {
   const s = await api("GET", "/settings");
   const f = $("#whatsapp-form");
   f.dispatch_number.value = s.dispatch_number || "";
-  startWaEvents();
+  pollWaStatus();
+  startWaPoller();
 }
 
-function startWaEvents() {
-  if (_waEvtSource) { _waEvtSource.close(); _waEvtSource = null; }
-  _waEvtSource = new EventSource("/api/admin/whatsapp/events");
-  _waEvtSource.onmessage = e => renderWaState(JSON.parse(e.data));
-  _waEvtSource.onerror = () => { _waEvtSource.close(); setTimeout(startWaEvents, 5000); };
+async function pollWaStatus() {
+  try { renderWaState(await api("GET", "/whatsapp/status")); } catch {}
+}
+
+function startWaPoller() {
+  stopWaPoller();
+  _waPoller = setInterval(pollWaStatus, 3000);
+}
+
+function stopWaPoller() {
+  if (_waPoller) { clearInterval(_waPoller); _waPoller = null; }
 }
 
 const WA_LABELS = {
@@ -310,6 +317,7 @@ document.addEventListener("click", async e => {
   if (d.tab) {
     document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x.dataset.tab === d.tab));
     document.querySelectorAll(".tab-panel").forEach(x => x.classList.toggle("active", x.id === "tab-" + d.tab));
+    if (d.tab === "whatsapp") startWaPoller(); else stopWaPoller();
     return;
   }
 

@@ -56,7 +56,11 @@ function initialize() {
   });
   client.on("loading_screen", (p, m) => {
     console.log(`[WhatsApp Web] Cargando: ${p}% - ${m}`);
-    waState.setState({ status: "initializing", qr: null });
+    // Solo regresa a "initializing" si todavía no hay QR ni sesión activa
+    const cur = waState.getState().status;
+    if (cur === "initializing" || cur === "disabled") {
+      waState.setState({ status: "initializing", qr: null });
+    }
   });
   client.on("authenticated", () => {
     console.log("[WhatsApp Web] Sesión recuperada ✓");

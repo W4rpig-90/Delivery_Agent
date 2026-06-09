@@ -2,6 +2,11 @@
 # Migra/siembra la base de datos y arranca la app. Idempotente: seguro en cada reinicio.
 set -e
 
+echo "[entrypoint] Limpiando locks de Chromium..."
+rm -f .wwebjs_auth/session/SingletonLock \
+       .wwebjs_auth/session/SingletonSocket \
+       .wwebjs_auth/session/SingletonCookie
+
 echo "[entrypoint] Migrando base de datos..."
 node src/db/migrate.js
 
