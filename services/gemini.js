@@ -121,7 +121,7 @@ Seguido de un mensaje cálido diciendo que la cocina ya recibió el pedido y que
 - Los precios usan puntos de miles: $10.000, $58.000
 - Si el cliente quiere cancelar o empezar de cero, indicale que escriba *reiniciar*
 - No respondas sobre temas ajenos al restaurante
-- Si el cliente ya confirmó y quiere agregar algo, indicale que inicie un nuevo pedido escribiendo *reiniciar*`;`
+- Si el cliente ya confirmó y quiere agregar algo, indicale que inicie un nuevo pedido escribiendo *reiniciar*`;
 
 function getModel() {
   return genAI.getGenerativeModel({
