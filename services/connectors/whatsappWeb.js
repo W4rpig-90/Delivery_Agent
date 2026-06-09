@@ -8,6 +8,7 @@ const { parseTotalFromSummary } = require("../database");
 const ordersRepo = require("../../src/repositories/orders.repo");
 const { createWhatsappOrder, updateStatus, setStatusNotifier } = require("../../src/services/orderService");
 const { parseKitchenKeyword, kitchenInstructions } = require("../../src/services/orderStatusMessages");
+const { setWaDispatchSender } = require("../dispatchNotifier");
 const settingsRepo = require("../../src/repositories/settings.repo");
 const waState = require("../../src/services/whatsappState");
 
@@ -71,6 +72,14 @@ function initialize() {
     console.log(`\n[WhatsApp Web] Bot conectado y escuchando ✓`);
     console.log(`[Cocina] Despacho: ${dn || "(no configurado)"}\n`);
     waState.setState({ status: "ready", qr: null });
+
+    // Registrar el sender de despacho para que dispatchNotifier lo use
+    // (cubre pedidos de kiosko y otros canales que no pasan por handleOrderConfirmed)
+    setWaDispatchSender(async (ticket) => {
+      const dispatchNum = getDispatchNumber();
+      if (!dispatchNum) throw new Error("DISPATCH_NUMBER no configurado");
+      await client.sendMessage(`${dispatchNum}@c.us`, ticket);
+    });
   });
   client.on("disconnected", (reason) => {
     console.log(`[WhatsApp Web] Desconectado: ${reason}`);
@@ -209,9 +218,12 @@ async function handleOrderConfirmed(phone, session, botResponse = "") {
         ticketText + "\n" + kitchenInstructions(order.ticket_number)
       );
       if (sent?.id?._serialized) ordersRepo.setWaMessageId(order.id, sent.id._serialized);
+      console.log(`[DESPACHO] Ticket ${order.ticket_number} enviado a cocina (${dispatchNum}) ✓`);
     } catch (err) {
       console.error("[DESPACHO] No se pudo notificar a cocina:", err.message);
     }
+  } else {
+    console.warn("[DESPACHO] Sin número de despacho configurado — ticket no enviado.");
   }
 
   // 4. Confirmar al cliente (sin imprimir: la impresión ocurre cuando cocina acepta)
