@@ -88,7 +88,7 @@ function stopPollers() {
 }
 
 async function loadAll() {
-  await Promise.all([loadServer(), loadModels(), loadContainersAndStats(), loadUsers()]);
+  await Promise.all([loadServer(), loadModels(), loadContainersAndStats()]);
 }
 
 async function loadModels() {
@@ -265,7 +265,10 @@ function botCard(c) {
 }
 
 // ─── Config modal ─────────────────────────────────────
+let _lastConfigName = null;
+
 async function openConfig(name) {
+  _lastConfigName = name;
   const [cfg] = await Promise.all([
     api("GET", `/instances/${name}`).catch(() => ({})),
   ]);
@@ -387,6 +390,14 @@ async function openConfig(name) {
       </div>
     </div>
 
+    <div class="cfg-section">
+      <div class="cfg-title" style="display:flex;justify-content:space-between;align-items:center">
+        Usuarios del panel Admin
+        <button class="btn-sec" style="flex:none;padding:4px 10px;font-size:12px" data-action="new-user">+ Nuevo usuario</button>
+      </div>
+      <div id="cfg-users-list" style="margin-top:8px"><em style="font-size:13px;color:var(--soft)">Cargando…</em></div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn-sec" data-action="close-modal">Cancelar</button>
       <button class="btn-primary" data-save="${esc(name)}">Guardar configuración</button>
@@ -394,6 +405,7 @@ async function openConfig(name) {
   `);
 
   document.querySelector(".modal-card").classList.add("wide");
+  renderUsersInModal();
 }
 
 function onModelChange(sel) {
@@ -465,12 +477,13 @@ async function restartBot(name) {
 
 // ─── Usuarios del panel Admin ─────────────────────────
 
-async function loadUsers() {
-  const el = $("#users-list");
+async function renderUsersInModal() {
+  const el = $("#cfg-users-list");
+  if (!el) return;
   try {
     const users = await api("GET", "/users");
     if (!users.length) {
-      el.innerHTML = '<div class="stat-placeholder">No hay usuarios. Crea el primero.</div>';
+      el.innerHTML = '<p style="font-size:13px;color:var(--soft)">Sin usuarios. Crea el primero.</p>';
       return;
     }
     el.innerHTML = `
@@ -482,15 +495,15 @@ async function loadUsers() {
             ${u.role === "admin" ? "Administrador" : "Operador"}
           </span></td>
           <td class="user-actions">
-            <button class="btn-sec" data-edit-user="${u.id}"
+            <button class="btn-sec btn-sm" data-edit-user="${u.id}"
               data-username="${esc(u.username)}" data-role="${esc(u.role)}">Editar</button>
-            <button class="btn-sec danger" data-del-user="${u.id}"
+            <button class="btn-sec btn-sm danger" data-del-user="${u.id}"
               data-username="${esc(u.username)}">Borrar</button>
           </td>
         </tr>`).join("")}</tbody>
       </table>`;
   } catch (ex) {
-    el.innerHTML = `<div class="stat-placeholder">Error: ${esc(ex.message)}</div>`;
+    el.innerHTML = `<p style="font-size:13px;color:var(--soft)">Error: ${esc(ex.message)}</p>`;
   }
 }
 
@@ -505,7 +518,7 @@ function openNewUserModal() {
       </select>
     </label>
     <div class="modal-actions">
-      <button class="btn-sec" data-action="close-modal">Cancelar</button>
+      <button class="btn-sec" data-action="back-to-cfg">← Volver</button>
       <button class="btn-primary" data-action="save-new-user">Crear usuario</button>
     </div>`);
 }
@@ -521,7 +534,7 @@ function openEditUserModal(id, username, role) {
       </select>
     </label>
     <div class="modal-actions">
-      <button class="btn-sec" data-action="close-modal">Cancelar</button>
+      <button class="btn-sec" data-action="back-to-cfg">← Volver</button>
       <button class="btn-primary" data-save-user="${id}">Guardar cambios</button>
     </div>`);
 }
@@ -533,9 +546,8 @@ async function createUser() {
   if (!username || !password) { toast("Usuario y contraseña requeridos", true); return; }
   try {
     await api("POST", "/users", { username, password, role });
-    closeModal();
     toast(`Usuario "${username}" creado ✓`);
-    loadUsers();
+    if (_lastConfigName) openConfig(_lastConfigName);
   } catch (ex) { toast(ex.message, true); }
 }
 
@@ -546,9 +558,9 @@ async function saveUser(id) {
   if (password) body.password = password;
   try {
     await api("PUT", `/users/${id}`, body);
-    closeModal();
     toast("Usuario actualizado ✓");
-    loadUsers();
+    // Go back to config modal (re-open last config)
+    if (_lastConfigName) openConfig(_lastConfigName);
   } catch (ex) { toast(ex.message, true); }
 }
 
@@ -557,7 +569,7 @@ async function deleteUser(id, username) {
   try {
     await api("DELETE", `/users/${id}`);
     toast(`"${username}" eliminado`);
-    loadUsers();
+    renderUsersInModal();
   } catch (ex) { toast(ex.message, true); }
 }
 
@@ -569,6 +581,7 @@ document.addEventListener("click", async e => {
 
   if (d.action === "logout")        { await api("POST", "/logout").catch(() => {}); showLogin(); return; }
   if (d.action === "close-modal")   return closeModal();
+  if (d.action === "back-to-cfg")   return _lastConfigName ? openConfig(_lastConfigName) : closeModal();
   if (d.action === "new-user")      return openNewUserModal();
   if (d.action === "save-new-user") return createUser();
 
