@@ -100,8 +100,9 @@ $("#login-form").addEventListener("submit", async e => {
 
 // ───── Carga general ─────
 async function loadAll() {
-  const tasks = [loadOrderDashboard(), loadWhatsapp()];
-  if (_currentRole === "admin") tasks.push(loadCategories(), loadProducts(), loadPayments(), loadSettings());
+  const safe = fn => fn().catch(err => console.error("[loadAll]", err));
+  const tasks = [safe(loadOrderDashboard), safe(loadWhatsapp)];
+  if (_currentRole === "admin") tasks.push(safe(loadCategories), safe(loadProducts), safe(loadPayments), safe(loadSettings));
   await Promise.all(tasks);
 }
 
@@ -521,9 +522,13 @@ document.addEventListener("click", async e => {
 
   if (d.tab) {
     switchTab(d.tab);
-    if (d.tab === "whatsapp")       { startWaPoller();      stopOrdersPoller(); }
-    else if (d.tab === "orders")    { stopWaPoller();        loadOrderDashboard(); startOrdersPoller(); }
-    else                            { stopWaPoller();        stopOrdersPoller(); }
+    if      (d.tab === "whatsapp")    { startWaPoller();   stopOrdersPoller();  loadWhatsapp(); }
+    else if (d.tab === "orders")      { stopWaPoller();    loadOrderDashboard(); startOrdersPoller(); }
+    else if (d.tab === "products")    { stopWaPoller();    stopOrdersPoller();  loadProducts(); }
+    else if (d.tab === "categories")  { stopWaPoller();    stopOrdersPoller();  loadCategories(); }
+    else if (d.tab === "payments")    { stopWaPoller();    stopOrdersPoller();  loadPayments(); }
+    else if (d.tab === "settings")    { stopWaPoller();    stopOrdersPoller();  loadSettings(); }
+    else                              { stopWaPoller();    stopOrdersPoller(); }
     return;
   }
 
