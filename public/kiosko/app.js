@@ -43,6 +43,11 @@ async function init() {
     state.paymentLabels = data.paymentLabels || {};
     state.deliveryLabels = data.deliveryLabels || {};
     if (data.categories.length > 0) state.activeCategory = data.categories[0].key;
+    const brand = data.restaurante?.nombre;
+    if (brand) {
+      document.querySelectorAll(".brand, .brand-small").forEach(el => { el.textContent = brand; });
+      document.title = brand + " — Kiosko";
+    }
     renderCategories();
     renderProducts();
   } catch (err) {
