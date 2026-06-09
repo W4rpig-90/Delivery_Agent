@@ -150,6 +150,35 @@ function markPrinted(id) {
   getDB().prepare("UPDATE orders SET printed_at = datetime('now','-5 hours') WHERE id = ?").run(id);
 }
 
+/** Conteo de pedidos activos por estado — para el dashboard de /admin. */
+function getOrderCountsByStatus() {
+  const db = getDB();
+  const rows = db.prepare(
+    "SELECT status, COUNT(*) as cnt FROM orders WHERE status NOT IN ('closed','cancelled') GROUP BY status"
+  ).all();
+  const m = {};
+  for (const r of rows) m[r.status] = r.cnt;
+  return {
+    pendientes:  m.pending  || 0,
+    en_cocina:   (m.accepted || 0) + (m.cooking || 0) + (m.ready || 0),
+    entregando:  m.sent     || 0,
+  };
+}
+
+/** Resumen de pedidos activos para el dashboard de /admin. */
+function getActiveOrdersSummary() {
+  const db = getDB();
+  return db.prepare(`
+    SELECT o.id, o.ticket_number, o.source, o.status,
+           o.customer_name, o.customer_phone, o.total_cop,
+           o.delivery_type, o.created_at,
+           (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) AS item_count
+    FROM orders o
+    WHERE o.status NOT IN ('closed','cancelled')
+    ORDER BY o.id DESC
+  `).all();
+}
+
 module.exports = {
   nextTicketNumber,
   createOrder,
@@ -161,5 +190,7 @@ module.exports = {
   getActiveOrders,
   getActiveOrdersDetailed,
   setStatus,
-  markPrinted
+  markPrinted,
+  getOrderCountsByStatus,
+  getActiveOrdersSummary,
 };

@@ -13,6 +13,7 @@ const QRCode = require("qrcode");
 const { requireAuth } = require("../middleware/auth");
 const products = require("../repositories/products.repo");
 const settings = require("../repositories/settings.repo");
+const ordersRepo = require("../repositories/orders.repo");
 const { upload, processAndSave, removeByPublicPath } = require("../services/uploadService");
 const waState = require("../services/whatsappState");
 
@@ -152,6 +153,16 @@ router.post("/payments/:id/qr", uploadSingle("qr"), async (req, res) => {
   if (pm.qr_image) removeByPublicPath(pm.qr_image);
   settings.setPaymentQr(pm.id, publicPath);
   res.json({ ok: true, qr_image: publicPath });
+});
+
+// ─────────────── Pedidos (dashboard) ───────────────
+
+router.get("/orders/counts", (_req, res) => {
+  res.json(ordersRepo.getOrderCountsByStatus());
+});
+
+router.get("/orders/active", (_req, res) => {
+  res.json(ordersRepo.getActiveOrdersSummary());
 });
 
 // ─────────────── WhatsApp ───────────────

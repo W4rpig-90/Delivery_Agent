@@ -69,7 +69,7 @@ $("#login-form").addEventListener("submit", async e => {
 
 // ───── Carga general ─────
 async function loadAll() {
-  await Promise.all([loadCategories(), loadProducts(), loadPayments(), loadSettings(), loadWhatsapp()]);
+  await Promise.all([loadOrderDashboard(), loadCategories(), loadProducts(), loadPayments(), loadSettings(), loadWhatsapp()]);
 }
 
 // ───── Categorías ─────
@@ -229,6 +229,68 @@ $("#settings-form").addEventListener("submit", async e => {
   } catch (ex) { toast(ex.message, true); }
 });
 
+// ───── Pedidos ─────
+let _ordersPoller = null;
+
+const ORDER_STATUS = {
+  pending:   { label: "⏳ Pendiente",   cls: "status-pending"  },
+  accepted:  { label: "✅ Recibido",    cls: "status-accepted" },
+  cooking:   { label: "👨‍🍳 Preparando", cls: "status-cooking"  },
+  sent:      { label: "🛵 Entregando",  cls: "status-sent"     },
+  ready:     { label: "🎉 Listo",       cls: "status-ready"    },
+  cancelled: { label: "❌ Cancelado",   cls: "status-cancelled"},
+};
+
+function timeAgo(createdAt) {
+  const mins = Math.floor((Date.now() - new Date(createdAt + "Z").getTime()) / 60000);
+  if (mins < 1) return "ahora";
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60); return `${h}h ${mins % 60}m`;
+}
+
+async function loadOrderDashboard() {
+  try {
+    const [counts, orders] = await Promise.all([
+      api("GET", "/orders/counts"),
+      api("GET", "/orders/active"),
+    ]);
+    $("#count-pendientes").textContent = counts.pendientes;
+    $("#count-cocina").textContent     = counts.en_cocina;
+    $("#count-entregando").textContent = counts.entregando;
+    const wrap = $("#orders-list");
+    if (!orders.length) {
+      wrap.innerHTML = '<p class="muted" style="padding:20px 0">No hay pedidos activos.</p>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table class="grid orders-grid">
+        <thead><tr><th>Ticket</th><th>Canal</th><th>Cliente</th><th>Items</th><th>Total</th><th>Estado</th><th>Hace</th></tr></thead>
+        <tbody>${orders.map(o => {
+          const st  = ORDER_STATUS[o.status] || { label: o.status, cls: "" };
+          const src = o.source === "whatsapp" ? "📱 WA" : "🖥️ Kiosko";
+          const who = o.customer_name || (o.customer_phone ? `+${o.customer_phone}` : "—");
+          return `<tr>
+            <td><strong>${esc(o.ticket_number)}</strong></td>
+            <td>${src}</td>
+            <td>${esc(who)}</td>
+            <td class="muted">${o.item_count}</td>
+            <td>${fmt(o.total_cop)}</td>
+            <td><span class="order-status ${st.cls}">${st.label}</span></td>
+            <td class="muted">${timeAgo(o.created_at)}</td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table>`;
+  } catch { /* sin pedidos activos */ }
+}
+
+function startOrdersPoller() {
+  stopOrdersPoller();
+  _ordersPoller = setInterval(loadOrderDashboard, 15000);
+}
+function stopOrdersPoller() {
+  if (_ordersPoller) { clearInterval(_ordersPoller); _ordersPoller = null; }
+}
+
 // ───── WhatsApp ─────
 let _waPoller = null;
 
@@ -317,7 +379,9 @@ document.addEventListener("click", async e => {
   if (d.tab) {
     document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x.dataset.tab === d.tab));
     document.querySelectorAll(".tab-panel").forEach(x => x.classList.toggle("active", x.id === "tab-" + d.tab));
-    if (d.tab === "whatsapp") startWaPoller(); else stopWaPoller();
+    if (d.tab === "whatsapp") { startWaPoller(); stopOrdersPoller(); }
+    else if (d.tab === "orders") { stopWaPoller(); loadOrderDashboard(); startOrdersPoller(); }
+    else { stopWaPoller(); stopOrdersPoller(); }
     return;
   }
 
@@ -327,6 +391,7 @@ document.addEventListener("click", async e => {
     case "change-pass": return changePasswordForm();
     case "new-category": return categoryForm(null);
     case "new-product": return productForm(null);
+    case "refresh-orders": return loadOrderDashboard();
   }
 
   if (d.editCat) return categoryForm(categoriesCache.find(c => c.id === +d.editCat));

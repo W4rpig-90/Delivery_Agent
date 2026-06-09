@@ -92,3 +92,23 @@ main{max-width:1000px;margin:0 auto;padding:24px 20px}
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.2)}
 .toast.err{background:var(--brand)}
+
+/* PEDIDOS dashboard */
+.orders-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:520px){.orders-stats{grid-template-columns:1fr}}
+.stat-card{background:#fff;border-radius:14px;padding:22px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center;border-top:4px solid var(--line)}
+.stat-card.warn{border-top-color:#f59e0b}
+.stat-card.info{border-top-color:#3b82f6}
+.stat-card.ok{border-top-color:#10b981}
+.stat-number{font-size:46px;font-weight:800;line-height:1;margin-bottom:6px;color:var(--ink)}
+.stat-label{font-size:12px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.orders-grid td{vertical-align:middle}
+.order-status{font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;background:var(--bg);color:var(--ink-soft)}
+.order-status.status-pending{background:#fef3c7;color:#92400e}
+.order-status.status-accepted{background:#d1fae5;color:#065f46}
+.order-status.status-cooking{background:#dbeafe;color:#1e40af}
+.order-status.status-sent{background:#ede9fe;color:#5b21b6}
+.order-status.status-ready{background:#d1fae5;color:#065f46}
+.order-status.status-cancelled{background:#fee2e2;color:#991b1b}
+.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px}
+.secondary:hover{background:var(--bg)}

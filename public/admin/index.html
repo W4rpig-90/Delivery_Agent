@@ -24,6 +24,7 @@
     <header class="topbar">
       <span class="brand">🍽️ <strong id="brand-name">Donatto</strong> · Admin</span>
       <nav class="tabs">
+        <button class="tab" data-tab="orders">Pedidos</button>
         <button class="tab active" data-tab="products">Productos</button>
         <button class="tab" data-tab="categories">Categorías</button>
         <button class="tab" data-tab="payments">Pagos</button>
@@ -38,6 +39,29 @@
     </header>
 
     <main>
+      <!-- PEDIDOS -->
+      <section id="tab-orders" class="tab-panel">
+        <div class="panel-head">
+          <h2>Pedidos activos</h2>
+          <button class="secondary" data-action="refresh-orders">↻ Actualizar</button>
+        </div>
+        <div class="orders-stats">
+          <div class="stat-card warn">
+            <div class="stat-number" id="count-pendientes">—</div>
+            <div class="stat-label">Pendientes</div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-number" id="count-cocina">—</div>
+            <div class="stat-label">En cocina</div>
+          </div>
+          <div class="stat-card ok">
+            <div class="stat-number" id="count-entregando">—</div>
+            <div class="stat-label">Entregando</div>
+          </div>
+        </div>
+        <div id="orders-list"></div>
+      </section>
+
       <!-- PRODUCTOS -->
       <section id="tab-products" class="tab-panel active">
         <div class="panel-head">

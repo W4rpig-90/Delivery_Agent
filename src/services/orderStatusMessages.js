@@ -12,9 +12,9 @@ function normalize(text) {
 
 // Palabra clave / número / emoji → estado
 const KEYWORD_MAP = [
-  { status: "accepted",  match: /\b(aceptad[oa]|acepto|aceptar|acepta|ok|dale|1)\b|✅/ },
-  { status: "cooking",   match: /\b(cocinando|preparando|cocina|2)\b|👨‍🍳|🍳/ },
-  { status: "sent",      match: /\b(enviad[oa]|despachad[oa]|en camino|camino|salio|3)\b|🛵|🏍/ },
+  { status: "accepted",  match: /\b(recibido|aceptad[oa]|acepto|aceptar|acepta|ok|dale|1)\b|✅/ },
+  { status: "cooking",   match: /\b(preparando|en preparaci[oó]n|cocinando|cocina|2)\b|👨‍🍳|🍳/ },
+  { status: "sent",      match: /\b(entregando|enviad[oa]|despachad[oa]|en camino|camino|salio|3)\b|🛵|🏍/ },
   { status: "ready",     match: /\b(list[oa]|lista para recoger|recoger|4)\b|🎉/ },
   { status: "cancelled", match: /\b(cancelar|cancelad[oa]|rechazar|rechazad[oa]|anular)\b|❌/ }
 ];
@@ -35,7 +35,7 @@ function kitchenInstructions(ticketNumber) {
     "",
     "━━━━━━━━━━━━━━━━━━━━━━━━━",
     `↩️ *Responde a este mensaje* para actualizar el pedido *${ticketNumber}*:`,
-    "✅ *aceptado* (1)   👨‍🍳 *cocinando* (2)   🛵 *enviado* (3)",
+    "✅ *recibido*   👨‍🍳 *preparando*   🛵 *entregando*",
     "❌ *cancelar* para rechazarlo"
   ].join("\n");
 }
@@ -43,16 +43,16 @@ function kitchenInstructions(ticketNumber) {
 /** Mensaje que se envía al CLIENTE cuando cambia el estado. null = no notificar. */
 function customerStatusMessage(order, status) {
   const ticket = order.ticket_number || "";
-  const name = order.customer_name ? ` ${order.customer_name}` : "";
+  const name = order.customer_name ? `, ${order.customer_name}` : "";
   switch (status) {
     case "accepted":
-      return `✅ ¡Hola${name}! Tu pedido *${ticket}* fue *aceptado* y entró a cocina. Te avisamos cuando salga. 🍕`;
+      return `✅ ¡Hola${name}! Tu pedido *${ticket}* fue *recibido* por la cocina. Ya comenzamos a prepararlo. 🍕`;
     case "cooking":
-      return `👨‍🍳 Tu pedido *${ticket}* se está *preparando*.`;
+      return `👨‍🍳 Tu pedido *${ticket}* está *en preparación*. Ya casi está listo.`;
     case "ready":
-      return `🎉 ¡Tu pedido *${ticket}* está *listo*!`;
+      return `🎉 ¡Tu pedido *${ticket}* está *listo*! Pronto te llega.`;
     case "sent":
-      return `🛵 ¡Tu pedido *${ticket}* va en *camino*! Pronto llega. 🙌`;
+      return `🛵 ¡Tu pedido *${ticket}* va en camino! Ya está con el domiciliario. 🙌`;
     case "cancelled":
       return `❌ Lamentamos avisarte que tu pedido *${ticket}* fue *cancelado*. Escríbenos si necesitas ayuda.`;
     default:
