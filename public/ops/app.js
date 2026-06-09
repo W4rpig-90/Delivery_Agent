@@ -212,9 +212,9 @@ function renderBots() {
 }
 
 function botCard(c) {
-  const s   = _statsMap[c.name];
-  const sc  = SC[c.status] || "off";
-  const sl  = SL[c.status] || c.statusText || c.status;
+  const s    = _statsMap[c.name];
+  const sc   = SC[c.status] || "off";
+  const sl   = SL[c.status] || c.statusText || c.status;
   const port = c.ports.length ? c.ports[0] : "—";
 
   const cpuPct = s ? Math.min(s.cpu_pct, 100) : 0;
@@ -248,7 +248,7 @@ function botCard(c) {
     <div class="bot-head">
       <div class="bot-avatar">&#127829;</div>
       <div>
-        <div class="bot-name">${esc(c.name)}</div>
+        <div class="bot-name">${esc(c.name)}${c.isPrimary ? ' <span style="font-size:11px;font-weight:400;color:var(--soft)">(principal)</span>' : ""}</div>
         <div class="bot-meta">
           <span class="badge ${sc}">${sl}</span>
           <span>:${esc(String(port))}</span>
@@ -260,15 +260,73 @@ function botCard(c) {
       <button class="btn-primary" data-cfg="${esc(c.name)}">Configurar</button>
       <button class="btn-sec" data-restart="${esc(c.name)}"
         ${c.noSocket ? "disabled title='Docker socket no disponible'" : ""}>Reiniciar</button>
+      <button class="btn-sec" data-clone="${esc(c.name)}">Clonar</button>
+      ${!c.isPrimary ? `<button class="btn-sec" style="color:#e05;border-color:#e05" data-del-inst="${esc(c.name)}">Eliminar</button>` : ""}
     </div>
   </div>`;
 }
 
+// ─── Clone modal ──────────────────────────────────────
+function openCloneModal(sourceName) {
+  openModal("Nueva instancia", `
+    <p style="font-size:13px;color:var(--soft);margin-bottom:16px">
+      Crea un clon independiente de <strong>${esc(sourceName)}</strong> con su propia
+      base de datos, menú y configuración.
+    </p>
+    <label>Nombre del negocio
+      <input id="clone-brand" placeholder="El Vegetariano" autofocus />
+    </label>
+    <label>Slug (identificador único, sin espacios)
+      <input id="clone-slug" placeholder="vegetariano" />
+    </label>
+    <label>Puerto del host (vacío = automático)
+      <input id="clone-port" type="number" placeholder="auto" min="1024" max="65535" />
+    </label>
+    <p style="font-size:12px;color:var(--soft);margin-top:4px">
+      Una vez creada, abre el panel Admin de la nueva instancia para ajustar el menú y los datos del negocio.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-sec" data-action="close-modal">Cancelar</button>
+      <button class="btn-primary" id="do-clone-btn" data-source="${esc(sourceName)}">Crear instancia</button>
+    </div>
+  `);
+}
+
+async function doClone(sourceName) {
+  const brand = ($("#clone-brand")?.value || "").trim();
+  const slug  = ($("#clone-slug")?.value || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/^-+|-+$/g, "");
+  const port  = parseInt($("#clone-port")?.value) || undefined;
+  if (!brand || !slug) { toast("Nombre y slug son obligatorios", true); return; }
+
+  const btn = $("#do-clone-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Creando…"; }
+  try {
+    const r = await api("POST", "/instances", { slug, brandName: brand, port });
+    closeModal();
+    toast(`"${brand}" creada en puerto ${r.port} ✓`);
+    setTimeout(loadContainersAndStats, 3500);
+  } catch (ex) {
+    toast(ex.message, true);
+    if (btn) { btn.disabled = false; btn.textContent = "Crear instancia"; }
+  }
+}
+
+async function deleteInstance(name) {
+  if (!confirm(`¿Eliminar la instancia "${name}"?\n\nSe detendrá el contenedor y se borrará su configuración.\nLos datos (base de datos, imágenes) quedarán en el servidor.`)) return;
+  try {
+    await api("DELETE", `/instances/${name}`);
+    toast(`Instancia "${name}" eliminada`);
+    loadContainersAndStats();
+  } catch (ex) { toast(ex.message, true); }
+}
+
 // ─── Config modal ─────────────────────────────────────
 let _lastConfigName = null;
+let _lastConfigIsPrimary = true;
 
-async function openConfig(name) {
-  _lastConfigName = name;
+async function openConfig(name, isPrimary) {
+  _lastConfigName    = name;
+  _lastConfigIsPrimary = isPrimary !== false;
   const [cfg] = await Promise.all([
     api("GET", `/instances/${name}`).catch(() => ({})),
   ]);
@@ -398,9 +456,23 @@ async function openConfig(name) {
       <div id="cfg-users-list" style="margin-top:8px"><em style="font-size:13px;color:var(--soft)">Cargando…</em></div>
     </div>
 
+    ${!_lastConfigIsPrimary ? `
+    <div class="cfg-section">
+      <div class="cfg-title" style="display:flex;justify-content:space-between;align-items:center">
+        Menú (JSON)
+        <button class="btn-sec" style="flex:none;padding:4px 10px;font-size:12px" data-action="load-menu">Cargar menú actual</button>
+      </div>
+      <p style="font-size:12px;color:var(--soft);margin:4px 0 8px">
+        Pega aquí el JSON del menú antes de desplegar. Formato: <code>{"categorias":[...]}</code>
+      </p>
+      <textarea id="cfg-menu-json" rows="8" style="font-family:monospace;font-size:12px;resize:vertical"
+        placeholder='{"categorias": [...]}'></textarea>
+    </div>` : ""}
+
     <div class="modal-actions">
       <button class="btn-sec" data-action="close-modal">Cancelar</button>
       <button class="btn-primary" data-save="${esc(name)}">Guardar configuración</button>
+      ${!_lastConfigIsPrimary ? `<button class="btn-primary" data-deploy="${esc(name)}" style="background:var(--green,#1a7a4a)">Guardar y reiniciar</button>` : ""}
     </div>
   `);
 
@@ -427,6 +499,16 @@ function onModelChange(sel) {
     keyLabel.childNodes[0].textContent = `${keyVar}${keyVia ? " · vía " + keyVia : ""} `;
   }
   if (hint && keyUrl) { hint.href = keyUrl; hint.textContent = keyUrl; }
+}
+
+async function loadMenuIntoModal(name) {
+  const ta = $("#cfg-menu-json");
+  if (!ta) return;
+  ta.value = "Cargando…";
+  try {
+    const menu = await api("GET", `/instances/${name}/menu`);
+    ta.value = menu ? JSON.stringify(menu, null, 2) : "";
+  } catch { ta.value = ""; }
 }
 
 async function saveConfig(name) {
@@ -461,9 +543,40 @@ async function saveConfig(name) {
 
   try {
     await api("PUT", `/instances/${name}`, payload);
-    closeModal();
     toast(`"${name}" configurado ✓`);
-  } catch (ex) { toast(ex.message, true); }
+    return true;
+  } catch (ex) { toast(ex.message, true); return false; }
+}
+
+async function deployConfig(name) {
+  // 1. Guardar config
+  const ok = await saveConfig(name);
+  if (!ok) return;
+
+  // 2. Guardar menú si hay contenido en el textarea
+  const ta = $("#cfg-menu-json");
+  if (ta && ta.value.trim()) {
+    try {
+      const menu = JSON.parse(ta.value.trim());
+      await api("PUT", `/instances/${name}/menu`, menu);
+    } catch {
+      toast("El JSON del menú es inválido — se guardó la config pero no se actualizó el menú", true);
+      return;
+    }
+  }
+
+  // 3. Desplegar contenedor
+  const btn = $(`[data-deploy="${name}"]`);
+  if (btn) { btn.disabled = true; btn.textContent = "Desplegando…"; }
+  try {
+    const r = await api("POST", `/instances/${name}/deploy`);
+    closeModal();
+    toast(`"${name}" desplegado en puerto ${r.port} ✓`);
+    setTimeout(loadContainersAndStats, 4000);
+  } catch (ex) {
+    toast(ex.message, true);
+    if (btn) { btn.disabled = false; btn.textContent = "Guardar y reiniciar"; }
+  }
 }
 
 async function restartBot(name) {
@@ -575,19 +688,24 @@ async function deleteUser(id, username) {
 
 // ─── Event delegation ─────────────────────────────────
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save],[data-save-user],[data-edit-user],[data-del-user]");
+  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save],[data-deploy],[data-clone],[data-del-inst],[data-save-user],[data-edit-user],[data-del-user]");
   if (!t) return;
   const d = t.dataset;
 
   if (d.action === "logout")        { await api("POST", "/logout").catch(() => {}); showLogin(); return; }
   if (d.action === "close-modal")   return closeModal();
-  if (d.action === "back-to-cfg")   return _lastConfigName ? openConfig(_lastConfigName) : closeModal();
+  if (d.action === "back-to-cfg")   return _lastConfigName ? openConfig(_lastConfigName, _lastConfigIsPrimary) : closeModal();
   if (d.action === "new-user")      return openNewUserModal();
   if (d.action === "save-new-user") return createUser();
+  if (d.action === "new-instance")  return openCloneModal("donatto");
+  if (d.action === "load-menu")     return loadMenuIntoModal(_lastConfigName);
 
-  if (d.cfg)      return openConfig(d.cfg);
+  if (d.cfg)      return openConfig(d.cfg, _containers.find(c => c.name === d.cfg)?.isPrimary !== false);
   if (d.restart)  return restartBot(d.restart);
-  if (d.save)     return saveConfig(d.save);
+  if (d.save)     { await saveConfig(d.save); closeModal(); return; }
+  if (d.deploy)   return deployConfig(d.deploy);
+  if (d.clone)    return openCloneModal(d.clone);
+  if (d.delInst)  return deleteInstance(d.delInst);
   if (d.saveUser) return saveUser(d.saveUser);
   if (d.editUser) return openEditUserModal(d.editUser, d.username, d.role);
   if (d.delUser)  return deleteUser(d.delUser, d.username);

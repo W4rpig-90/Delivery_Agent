@@ -149,6 +149,7 @@ router.get("/containers", requireOpsAuth, async (_req, res) => {
     const filter = encodeURIComponent(JSON.stringify({ label: ["donatto-bot=true"] }));
     const { body } = await dockerRequest("GET", `/containers/json?all=true&filters=${filter}`);
     if (!Array.isArray(body)) throw new Error("socket no disponible");
+    const primary = process.env.BOT_SLUG || "donatto";
     res.json(body.map(c => ({
       id:         c.Id.slice(0, 12),
       name:       c.Labels?.["donatto-name"] || c.Names?.[0]?.replace("/", "") || "bot",
@@ -157,6 +158,7 @@ router.get("/containers", requireOpsAuth, async (_req, res) => {
       ports:      (c.Ports || []).map(p => p.PublicPort).filter(Boolean),
       image:      c.Image,
       created:    c.Created,
+      isPrimary:  (c.Labels?.["donatto-name"] || "") === primary,
     })));
   } catch {
     res.json([{
@@ -168,6 +170,7 @@ router.get("/containers", requireOpsAuth, async (_req, res) => {
       image:     "donatto-resto-bar",
       created:   null,
       noSocket:  true,
+      isPrimary: true,
     }]);
   }
 });
@@ -213,11 +216,158 @@ function writeConfig(name, data) {
   fs.writeFileSync(path.join(INSTANCES_DIR, `${name}.json`), JSON.stringify(data, null, 2));
 }
 
+router.get("/instances", requireOpsAuth, (_req, res) => {
+  try {
+    const items = fs.readdirSync(INSTANCES_DIR)
+      .filter(f => f.endsWith(".json"))
+      .map(f => ({ name: f.replace(".json", ""), ...readConfig(f.replace(".json", "")) }));
+    res.json(items);
+  } catch { res.json([]); }
+});
+
 router.get("/instances/:name", requireOpsAuth, (req, res) => res.json(readConfig(req.params.name)));
 
 router.put("/instances/:name", requireOpsAuth, (req, res) => {
   writeConfig(req.params.name, { ...readConfig(req.params.name), ...req.body });
   res.json({ ok: true });
+});
+
+// ─── Menú de instancia ────────────────────────────────────────────────────
+router.get("/instances/:name/menu", requireOpsAuth, (req, res) => {
+  const menuPath = path.join(INSTANCES_DIR, req.params.name, "data", "menu.json");
+  if (!fs.existsSync(menuPath)) return res.json(null);
+  try { res.json(JSON.parse(fs.readFileSync(menuPath, "utf8"))); }
+  catch { res.status(400).json({ error: "menu.json inválido" }); }
+});
+
+router.put("/instances/:name/menu", requireOpsAuth, (req, res) => {
+  const dir = path.join(INSTANCES_DIR, req.params.name, "data");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "menu.json"), JSON.stringify(req.body, null, 2));
+  res.json({ ok: true });
+});
+
+// ─── Ciclo de vida de instancias ──────────────────────────────────────────
+
+async function resolveHostDataPath() {
+  try {
+    const { body } = await dockerRequest("GET", `/containers/${os.hostname()}/json`);
+    const m = (body.Mounts || []).find(m => m.Destination === "/app/data");
+    return m?.Source || null;
+  } catch { return null; }
+}
+
+async function deployInstanceContainer(slug, config) {
+  const hostDataRoot = (await resolveHostDataPath()) || process.env.HOST_DATA_PATH || "/root/Delivery_Agent/data";
+  const hostBase     = path.join(hostDataRoot, "instances", slug);
+  const localBase    = path.resolve(__dirname, "../../data/instances", slug);
+
+  for (const sub of ["data", ".wwebjs_auth", ".wwebjs_cache"])
+    fs.mkdirSync(path.join(localBase, sub), { recursive: true });
+
+  const containerName = `delivery-agent-${slug}`;
+  const port          = String(config.KIOSK_PORT || "3001");
+
+  try { await dockerRequest("POST", `/containers/${containerName}/stop`); } catch {}
+  try { await dockerRequest("DELETE", `/containers/${containerName}?force=true`); } catch {}
+
+  const reserved = new Set(["KIOSK_PORT", "BOT_SLUG"]);
+  const envArr = Object.entries(config)
+    .filter(([k, v]) => k === k.toUpperCase() && !reserved.has(k) && v != null && v !== "")
+    .map(([k, v]) => `${k}=${v}`);
+  envArr.push("KIOSK_PORT=3000", `BOT_SLUG=${slug}`);
+
+  const { status, body: created } = await dockerRequest(
+    "POST", `/containers/create?name=${containerName}`,
+    {
+      Image: "donatto-resto-bar:latest",
+      Env: envArr,
+      Labels: { "donatto-bot": "true", "donatto-name": slug },
+      HostConfig: {
+        PortBindings: { "3000/tcp": [{ HostPort: port }] },
+        Binds: [
+          `${hostBase}/data:/app/data`,
+          `${hostBase}/.wwebjs_auth:/app/.wwebjs_auth`,
+          `${hostBase}/.wwebjs_cache:/app/.wwebjs_cache`,
+          `/var/run/docker.sock:/var/run/docker.sock`,
+        ],
+        RestartPolicy: { Name: "unless-stopped" },
+        Init: true,
+      },
+      ExposedPorts: { "3000/tcp": {} },
+    }
+  );
+
+  if (status >= 400) {
+    const msg = typeof created === "string" ? created : (created?.message || JSON.stringify(created));
+    throw new Error(msg);
+  }
+  await dockerRequest("POST", `/containers/${created.Id}/start`);
+  return { containerName, port: Number(port) };
+}
+
+router.post("/instances", requireOpsAuth, async (req, res) => {
+  const { slug, brandName, port } = req.body || {};
+  if (!slug || !brandName) return res.status(400).json({ error: "slug y brandName requeridos" });
+  if (!/^[a-z0-9][a-z0-9-]{0,29}$/.test(slug))
+    return res.status(400).json({ error: "slug: solo minúsculas, dígitos y guiones (máx 30)" });
+
+  const cfgPath = path.join(INSTANCES_DIR, `${slug}.json`);
+  if (fs.existsSync(cfgPath)) return res.status(409).json({ error: "Ya existe una instancia con ese slug" });
+
+  const usedPorts = new Set([Number(process.env.KIOSK_PORT) || 3000]);
+  for (const f of fs.readdirSync(INSTANCES_DIR).filter(f => f.endsWith(".json"))) {
+    const p = parseInt(readConfig(f.replace(".json", "")).KIOSK_PORT);
+    if (p) usedPorts.add(p);
+  }
+  let assignedPort = port ? Number(port) : 3001;
+  while (usedPorts.has(assignedPort)) assignedPort++;
+
+  const config = {
+    BRAND_NAME:             brandName,
+    KIOSK_PORT:             String(assignedPort),
+    WHATSAPP_LOCAL_ENABLED: "false",
+    KIOSK_ENABLED:          "true",
+    KIOSK_PAYMENTS:         "efectivo",
+    TIMEZONE:               "America/Bogota",
+    ADMIN_INITIAL_PASSWORD: "donatto2026",
+    SESSION_SECRET:         crypto.randomBytes(32).toString("hex"),
+  };
+  writeConfig(slug, config);
+
+  try {
+    const result = await deployInstanceContainer(slug, config);
+    res.json({ ok: true, slug, port: result.port });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/instances/:name", requireOpsAuth, async (req, res) => {
+  const name    = req.params.name;
+  const primary = process.env.BOT_SLUG || "donatto";
+  if (name === primary) return res.status(403).json({ error: "No se puede eliminar la instancia primaria" });
+
+  const containerName = `delivery-agent-${name}`;
+  try { await dockerRequest("POST", `/containers/${containerName}/stop`); } catch {}
+  try { await dockerRequest("DELETE", `/containers/${containerName}?force=true`); } catch {}
+
+  const cfgPath = path.join(INSTANCES_DIR, `${name}.json`);
+  if (fs.existsSync(cfgPath)) fs.unlinkSync(cfgPath);
+
+  res.json({ ok: true });
+});
+
+router.post("/instances/:name/deploy", requireOpsAuth, async (req, res) => {
+  const name   = req.params.name;
+  const config = readConfig(name);
+  if (!config.KIOSK_PORT) return res.status(400).json({ error: "Configura el puerto antes de desplegar" });
+  try {
+    const r = await deployInstanceContainer(name, config);
+    res.json({ ok: true, ...r });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.post("/containers/:name/restart", requireOpsAuth, async (req, res) => {
