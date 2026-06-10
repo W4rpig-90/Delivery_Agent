@@ -756,3 +756,9 @@ document.addEventListener("click", async e => {
 });
 
 checkSession();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/ops/sw.js").catch(() => {});
+  });
+}

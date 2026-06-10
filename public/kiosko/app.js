@@ -405,3 +405,9 @@ function bindActions() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/kiosko/sw.js", { scope: "/" }).catch(() => {});
+  });
+}

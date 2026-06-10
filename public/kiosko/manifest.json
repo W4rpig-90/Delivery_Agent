@@ -1,0 +1,21 @@
+{
+  "name": "Kiosko de pedidos",
+  "short_name": "Kiosko",
+  "description": "Realiza tu pedido desde el kiosko del restaurante",
+  "start_url": "/kiosko/",
+  "scope": "/kiosko/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8f0",
+  "theme_color": "#e63946",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/kiosko/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "shopping"]
+}

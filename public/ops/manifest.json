@@ -1,0 +1,20 @@
+{
+  "name": "Delivery Agent Ops",
+  "short_name": "Ops",
+  "description": "Panel de operaciones y gestión de instancias",
+  "start_url": "/ops/",
+  "scope": "/ops/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1e1b2e",
+  "theme_color": "#5b21b6",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/ops/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

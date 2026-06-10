@@ -37,6 +37,11 @@ function buildApp() {
   app.use(express.json({ limit: "1mb" }));
 
   // Estáticos
+  // Permite que el SW del kiosko intercept /api/menu para soporte offline
+  app.get("/kiosko/sw.js", (_req, res, next) => {
+    res.setHeader("Service-Worker-Allowed", "/");
+    next();
+  });
   app.use("/kiosko", express.static(path.join(PUBLIC_DIR, "kiosko")));
   app.use("/admin",  express.static(path.join(PUBLIC_DIR, "admin")));
   app.use("/kds",    express.static(path.join(PUBLIC_DIR, "kds")));

@@ -577,3 +577,9 @@ document.addEventListener("change", async e => {
 });
 
 checkSession();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/admin/sw.js").catch(() => {});
+  });
+}

@@ -146,3 +146,9 @@ function connectWS() {
 }
 
 checkSession();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/kds/sw.js").catch(() => {});
+  });
+}
