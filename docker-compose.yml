@@ -17,7 +17,7 @@ services:
       - "donatto-bot=true"
       - "donatto-name=${BOT_SLUG:-donatto}"
     ports:
-      - "${KIOSK_PORT:-3000}:3000"   # host:contenedor (cambia el host en .env si hace falta)
+      - "127.0.0.1:${KIOSK_PORT:-3000}:3000"  # solo localhost — acceso externo via Nginx
     volumes:
       - ./data:/app/data             # SQLite + imágenes subidas (persistente)
       - ./.wwebjs_auth:/app/.wwebjs_auth   # sesión de WhatsApp (no re-escanear QR)

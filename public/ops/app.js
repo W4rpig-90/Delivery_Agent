@@ -688,7 +688,7 @@ async function deleteUser(id, username) {
 
 // ─── Event delegation ─────────────────────────────────
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save],[data-deploy],[data-clone],[data-del-inst],[data-save-user],[data-edit-user],[data-del-user]");
+  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save],[data-deploy],[data-clone],[data-del-inst],[data-save-user],[data-edit-user],[data-del-user],[data-source]");
   if (!t) return;
   const d = t.dataset;
 
@@ -705,6 +705,7 @@ document.addEventListener("click", async e => {
   if (d.save)     { await saveConfig(d.save); closeModal(); return; }
   if (d.deploy)   return deployConfig(d.deploy);
   if (d.clone)    return openCloneModal(d.clone);
+  if (d.source)   return doClone(d.source);
   if (d.delInst)  return deleteInstance(d.delInst);
   if (d.saveUser) return saveUser(d.saveUser);
   if (d.editUser) return openEditUserModal(d.editUser, d.username, d.role);

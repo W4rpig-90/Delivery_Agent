@@ -6,15 +6,16 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 const orders = new Map();     // id -> order
 let ws = null;
 
-const STATUS_LABEL = { pending: "Pendiente", accepted: "Aceptado", cooking: "Cocinando", ready: "Listo", sent: "Enviado" };
+const STATUS_LABEL = { pending: "Pendiente", accepted: "Aceptado", cooking: "Cocinando", ready: "Listo", entregado: "Entregado", sent: "Enviado" };
 
 // Acciones disponibles según el estado actual
 const NEXT_ACTIONS = {
-  pending:  [{ t: "✅ Aceptar", s: "accepted", primary: true }, { t: "❌", s: "cancelled", ghost: true }],
-  accepted: [{ t: "👨‍🍳 Cocinando", s: "cooking", primary: true }, { t: "❌", s: "cancelled", ghost: true }],
-  cooking:  [{ t: "🛵 Enviado", s: "sent", primary: true }, { t: "🎉 Listo", s: "ready" }],
-  ready:    [{ t: "✔ Cerrar", s: "closed", primary: true }],
-  sent:     [{ t: "✔ Cerrar", s: "closed", primary: true }]
+  pending:   [{ t: "✅ Aceptar", s: "accepted", primary: true }, { t: "❌", s: "cancelled", ghost: true }],
+  accepted:  [{ t: "👨‍🍳 Cocinando", s: "cooking", primary: true }, { t: "❌", s: "cancelled", ghost: true }],
+  cooking:   [{ t: "🎉 Listo", s: "ready", primary: true }, { t: "🛵 Enviado", s: "sent" }],
+  ready:     [{ t: "✅ Entregado", s: "entregado", primary: true }, { t: "✔ Cerrar", s: "closed" }],
+  entregado: [{ t: "✔ Cerrar", s: "closed", primary: true }],
+  sent:      [{ t: "✔ Cerrar", s: "closed", primary: true }]
 };
 
 // ───── API ─────

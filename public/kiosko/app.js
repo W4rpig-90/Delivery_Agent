@@ -11,8 +11,21 @@ const state = {
   deliveryType: null,
   paymentMethod: "efectivo",
   customerName: "",
+  customerPhone: "",
   mesa: "",
-  notas: ""
+  notas: "",
+  _statusPollTimer: null,
+  _currentTicket: null,
+};
+
+const STATUS_DISPLAY = {
+  accepted:  { emoji: "✅", label: "Recibido — ¡la cocina ya lo vio!" },
+  cooking:   { emoji: "👨‍🍳", label: "En preparación…" },
+  ready:     { emoji: "🎉", label: "¡Tu pedido está listo! Pasa a recogerlo." },
+  entregado: { emoji: "🙌", label: "¡Entregado! Que lo disfrutes." },
+  sent:      { emoji: "🛵", label: "¡En camino!" },
+  cancelled: { emoji: "❌", label: "Pedido cancelado. Habla con el personal." },
+  closed:    { emoji: "✔",  label: "Pedido cerrado." },
 };
 
 const PAY_ICONS = { efectivo: "💵", qr_transferencia: "📱", datafono: "💳" };
@@ -215,9 +228,10 @@ function renderCheckout() {
 }
 
 async function submitOrder() {
-  state.customerName = document.getElementById("customer-name").value.trim();
-  state.mesa = document.getElementById("mesa-number").value.trim();
-  state.notas = document.getElementById("order-notes").value.trim();
+  state.customerName  = document.getElementById("customer-name").value.trim();
+  state.customerPhone = document.getElementById("customer-phone").value.trim();
+  state.mesa          = document.getElementById("mesa-number").value.trim();
+  state.notas         = document.getElementById("order-notes").value.trim();
 
   if (state.deliveryType === "mesa" && !state.mesa) {
     alert("Por favor ingresa el número de mesa.");
@@ -226,11 +240,12 @@ async function submitOrder() {
 
   const payload = {
     items: [...state.cart.values()].map(i => ({ id: i.id, qty: i.qty })),
-    paymentMethod: state.paymentMethod,
-    deliveryType: state.deliveryType,
-    mesa: state.mesa || null,
-    customerName: state.customerName || null,
-    notas: state.notas || null
+    paymentMethod:  state.paymentMethod,
+    deliveryType:   state.deliveryType,
+    mesa:           state.mesa || null,
+    customerName:   state.customerName  || null,
+    customerPhone:  state.customerPhone || null,
+    notas:          state.notas || null
   };
 
   showLoader(true);
@@ -264,7 +279,7 @@ function showConfirmation(data) {
 
   let inst = "";
   if (data.paymentMethod === "efectivo") {
-    inst = "Pasa a caja a cancelar mostrando este número de ticket. Te avisaremos cuando tu pedido esté listo.";
+    inst = "Pasa a caja a cancelar mostrando este número de ticket.";
   } else if (data.paymentMethod === "qr_transferencia") {
     inst = "Realiza la transferencia y muestra el comprobante en caja con tu número de ticket.";
   } else if (data.paymentMethod === "datafono") {
@@ -272,19 +287,57 @@ function showConfirmation(data) {
   }
   document.getElementById("confirm-instructions").textContent = inst;
 
+  // Mostrar box de estado y arrancar polling
+  state._currentTicket = data.ticketNumber;
+  const statusBox = document.getElementById("order-status-box");
+  statusBox.classList.remove("hidden");
+  document.getElementById("order-status-emoji").textContent = "⏳";
+  document.getElementById("order-status-label").textContent = "Esperando cocina…";
+  startStatusPolling(data.ticketNumber);
+
   showScreen("screen-confirm");
 }
 
+function startStatusPolling(ticketNumber) {
+  stopStatusPolling();
+  let lastStatus = null;
+  async function poll() {
+    try {
+      const r = await fetch(`/api/orders/status/${encodeURIComponent(ticketNumber)}`);
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.status !== lastStatus) {
+        lastStatus = d.status;
+        const info = STATUS_DISPLAY[d.status] || { emoji: "⏳", label: d.label || d.status };
+        document.getElementById("order-status-emoji").textContent = info.emoji;
+        document.getElementById("order-status-label").textContent = info.label;
+        if (["closed", "entregado", "cancelled"].includes(d.status)) stopStatusPolling();
+      }
+    } catch {}
+  }
+  poll();
+  state._statusPollTimer = setInterval(poll, 5000);
+}
+
+function stopStatusPolling() {
+  if (state._statusPollTimer) { clearInterval(state._statusPollTimer); state._statusPollTimer = null; }
+}
+
 function restart() {
+  stopStatusPolling();
   state.cart.clear();
   state.deliveryType = null;
   state.paymentMethod = "efectivo";
-  state.customerName = "";
-  state.mesa = "";
+  state.customerName  = "";
+  state.customerPhone = "";
+  state.mesa  = "";
   state.notas = "";
-  document.getElementById("customer-name").value = "";
-  document.getElementById("mesa-number").value = "";
-  document.getElementById("order-notes").value = "";
+  state._currentTicket = null;
+  document.getElementById("customer-name").value  = "";
+  document.getElementById("customer-phone").value = "";
+  document.getElementById("mesa-number").value    = "";
+  document.getElementById("order-notes").value    = "";
+  document.getElementById("order-status-box").classList.add("hidden");
   updateCartBar();
   showScreen("screen-welcome");
 }

@@ -53,6 +53,8 @@ function customerStatusMessage(order, status) {
       return `🎉 ¡Tu pedido *${ticket}* está *listo*! Pronto te llega.`;
     case "sent":
       return `🛵 ¡Tu pedido *${ticket}* va en camino! Ya está con el domiciliario. 🙌`;
+    case "entregado":
+      return `🙌 ¡Tu pedido *${ticket}* fue *entregado*! Que lo disfrutes. Gracias por tu compra. 🍕`;
     case "cancelled":
       return `❌ Lamentamos avisarte que tu pedido *${ticket}* fue *cancelado*. Escríbenos si necesitas ayuda.`;
     default:

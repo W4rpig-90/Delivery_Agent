@@ -17,7 +17,7 @@ const { buildKioskTicket } = require("../../services/kioskTicket");
 const { customerStatusMessage } = require("./orderStatusMessages");
 const orderBus = require("../orderEvents");
 
-const VALID_STATUSES = ["pending", "accepted", "cooking", "ready", "sent", "closed", "cancelled"];
+const VALID_STATUSES = ["pending", "accepted", "cooking", "ready", "entregado", "sent", "closed", "cancelled"];
 
 // Notificador al cliente (lo registra el conector de WhatsApp, que tiene el client).
 // Firma: async (order, status, message) => void
@@ -65,19 +65,21 @@ async function printOrderIfNeeded(order) {
 
 /**
  * Crea un pedido de KIOSKO (auto-aceptado → imprime y notifica a cocina).
- * @param {object} input { items:[{id,name,price,qty,notes}], customerName, deliveryType, mesa, paymentMethod, notas }
+ * @param {object} input { items, customerName, customerPhone, deliveryType, mesa, paymentMethod, notas }
  * @returns {{ id, ticketNumber, subtotal }}
  */
 function createKioskOrder(input) {
   const ticketNumber = ordersRepo.nextTicketNumber("K");
   const subtotal = input.items.reduce((s, i) => s + i.price * i.qty, 0);
+  const rawPhone = (input.customerPhone || "").replace(/\D/g, "");
+  const phone = rawPhone.length >= 7 ? (rawPhone.startsWith("57") ? rawPhone : "57" + rawPhone) : `KIOSKO-${ticketNumber}`;
 
   const id = ordersRepo.createOrder(
     {
       ticket_number: ticketNumber,
       source: "kiosko",
       status: "accepted",
-      customer_phone: `KIOSKO-${ticketNumber}`,
+      customer_phone: phone,
       customer_name: input.customerName ?? null,
       delivery_type: input.deliveryType ?? null,
       mesa: input.mesa ?? null,
@@ -160,9 +162,9 @@ async function updateStatus(orderId, newStatus) {
 
   orderBus.emit("order:status", order);
 
-  // Notificar al cliente final (solo pedidos de WhatsApp con teléfono real)
+  // Notificar al cliente final (pedidos WhatsApp o kiosk con teléfono real)
   const isRealPhone = order.customer_phone && !String(order.customer_phone).startsWith("KIOSKO-");
-  if (statusNotifier && order.source === "whatsapp" && isRealPhone) {
+  if (statusNotifier && isRealPhone) {
     const message = customerStatusMessage(order, newStatus);
     if (message) {
       try { await statusNotifier(order, newStatus, message); }

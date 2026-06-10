@@ -215,7 +215,10 @@ input, textarea { font-family: inherit; font-size: 18px; }
 .ticket-label { font-size: 14px; color: var(--ink-soft); font-weight: 600; letter-spacing: 1px; }
 .ticket-number { font-size: 56px; font-weight: 900; color: var(--brand-red); letter-spacing: 4px; }
 .confirm-details { background: var(--bg); border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 15px; line-height: 1.7; }
-.confirm-instructions { color: var(--ink-soft); margin-bottom: 24px; font-size: 15px; line-height: 1.5; }
+.confirm-instructions { color: var(--ink-soft); margin-bottom: 16px; font-size: 15px; line-height: 1.5; }
+.order-status-box { background: var(--bg); border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; text-align: center; transition: background 0.4s; }
+.order-status-emoji { font-size: 42px; line-height: 1; margin-bottom: 8px; }
+.order-status-label { font-size: 16px; font-weight: 700; color: var(--ink); }
 
 /* ───── Modal ───── */
 .modal {

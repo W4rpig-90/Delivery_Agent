@@ -83,6 +83,11 @@
         <input id="customer-name" type="text" placeholder="Para llamarte cuando esté listo" maxlength="60" autocomplete="off" />
       </div>
 
+      <div class="field">
+        <label>Tu WhatsApp <span class="optional">(opcional — para recibir el estado del pedido)</span></label>
+        <input id="customer-phone" type="tel" placeholder="300 123 4567" maxlength="15" inputmode="numeric" autocomplete="off" />
+      </div>
+
       <div id="mesa-field" class="field hidden">
         <label>Número de mesa</label>
         <input id="mesa-number" type="text" placeholder="Ej. 5" maxlength="3" inputmode="numeric" />
@@ -118,6 +123,10 @@
       </div>
       <div id="confirm-details" class="confirm-details"></div>
       <p id="confirm-instructions" class="confirm-instructions"></p>
+      <div id="order-status-box" class="order-status-box hidden">
+        <div id="order-status-emoji" class="order-status-emoji">⏳</div>
+        <div id="order-status-label" class="order-status-label">Esperando cocina…</div>
+      </div>
       <button class="btn-primary" data-action="restart">NUEVO PEDIDO</button>
     </div>
   </section>

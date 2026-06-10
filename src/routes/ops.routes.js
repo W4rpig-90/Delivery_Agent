@@ -284,7 +284,7 @@ async function deployInstanceContainer(slug, config) {
       Env: envArr,
       Labels: { "donatto-bot": "true", "donatto-name": slug },
       HostConfig: {
-        PortBindings: { "3000/tcp": [{ HostPort: port }] },
+        PortBindings: { "3000/tcp": [{ HostIp: "127.0.0.1", HostPort: port }] },
         Binds: [
           `${hostBase}/data:/app/data`,
           `${hostBase}/.wwebjs_auth:/app/.wwebjs_auth`,
