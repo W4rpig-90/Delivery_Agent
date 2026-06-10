@@ -277,7 +277,7 @@ function openCloneModal(sourceName) {
       <input id="clone-brand" placeholder="El Vegetariano" autofocus />
     </label>
     <label>Slug (identificador único, sin espacios)
-      <input id="clone-slug" placeholder="vegetariano" />
+      <input id="clone-slug" placeholder="mi-restaurante" />
     </label>
     <label>Puerto del host (vacío = automático)
       <input id="clone-port" type="number" placeholder="auto" min="1024" max="65535" />
