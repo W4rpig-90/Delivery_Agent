@@ -6,8 +6,8 @@
   "scope": "/kiosko/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fff8f0",
-  "theme_color": "#e63946",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff6b2c",
   "lang": "es",
   "icons": [
     {

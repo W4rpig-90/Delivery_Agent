@@ -6,8 +6,8 @@
   "scope": "/kds/",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#0f1923",
-  "theme_color": "#1d3557",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff6b2c",
   "lang": "es",
   "icons": [
     {

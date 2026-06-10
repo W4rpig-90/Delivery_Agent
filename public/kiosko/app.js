@@ -103,7 +103,7 @@ function renderProducts() {
       h.style.fontWeight = "800";
       h.style.fontSize = "14px";
       h.style.textTransform = "uppercase";
-      h.style.color = "var(--ink-soft)";
+      h.style.color = "var(--text-soft)";
       h.style.letterSpacing = "1px";
       h.style.marginTop = "4px";
       h.textContent = item.subcategoryLabel || item.subcategory.replace(/_/g, " ");
