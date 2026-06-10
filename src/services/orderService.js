@@ -17,7 +17,7 @@ const { buildKioskTicket } = require("../../services/kioskTicket");
 const { customerStatusMessage } = require("./orderStatusMessages");
 const orderBus = require("../orderEvents");
 
-const VALID_STATUSES = ["pending", "accepted", "cooking", "ready", "entregado", "sent", "closed", "cancelled"];
+const VALID_STATUSES = ["pending", "accepted", "cooking", "ready", "entregado", "sent", "finalizado", "closed", "cancelled"];
 
 // Notificador al cliente (lo registra el conector de WhatsApp, que tiene el client).
 // Firma: async (order, status, message) => void

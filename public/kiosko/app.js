@@ -19,13 +19,14 @@ const state = {
 };
 
 const STATUS_DISPLAY = {
-  accepted:  { emoji: "✅", label: "Recibido — ¡la cocina ya lo vio!" },
-  cooking:   { emoji: "👨‍🍳", label: "En preparación…" },
-  ready:     { emoji: "🎉", label: "¡Tu pedido está listo! Pasa a recogerlo." },
-  entregado: { emoji: "🙌", label: "¡Entregado! Que lo disfrutes." },
-  sent:      { emoji: "🛵", label: "¡En camino!" },
-  cancelled: { emoji: "❌", label: "Pedido cancelado. Habla con el personal." },
-  closed:    { emoji: "✔",  label: "Pedido cerrado." },
+  accepted:   { emoji: "✅", label: "Recibido — ¡la cocina ya lo vio!" },
+  cooking:    { emoji: "👨‍🍳", label: "En preparación…" },
+  ready:      { emoji: "🎉", label: "¡Tu pedido está listo! Pasa a recogerlo." },
+  entregado:  { emoji: "🙌", label: "¡Entregado! Que lo disfrutes." },
+  sent:       { emoji: "🛵", label: "¡En camino!" },
+  finalizado: { emoji: "🏁", label: "¡Pedido finalizado! Gracias por tu visita." },
+  cancelled:  { emoji: "❌", label: "Pedido cancelado. Habla con el personal." },
+  closed:     { emoji: "✔",  label: "Pedido cerrado." },
 };
 
 const PAY_ICONS = { efectivo: "💵", qr_transferencia: "📱", datafono: "💳" };
@@ -311,7 +312,7 @@ function startStatusPolling(ticketNumber) {
         const info = STATUS_DISPLAY[d.status] || { emoji: "⏳", label: d.label || d.status };
         document.getElementById("order-status-emoji").textContent = info.emoji;
         document.getElementById("order-status-label").textContent = info.label;
-        if (["closed", "entregado", "cancelled"].includes(d.status)) stopStatusPolling();
+        if (["closed", "entregado", "finalizado", "cancelled"].includes(d.status)) stopStatusPolling();
       }
     } catch {}
   }

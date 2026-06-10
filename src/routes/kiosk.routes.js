@@ -75,6 +75,7 @@ const STATUS_LABEL_ES = {
   ready:     "¡Listo para recoger!",
   entregado: "¡Entregado!",
   sent:      "En camino",
+  finalizado: "¡Finalizado!",
   closed:    "Cerrado",
   cancelled: "Cancelado",
 };
