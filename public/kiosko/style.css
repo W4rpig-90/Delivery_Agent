@@ -164,10 +164,16 @@ input, textarea { font-family: inherit; font-size: 18px; }
 .btn-primary:disabled { background: #c4c4c4; box-shadow: none; cursor: not-allowed; }
 
 /* ───── Checkout ───── */
-.checkout-body { flex: 1; min-height: 0; overflow-y: auto; padding: 24px; max-width: 720px; width: 100%; margin: 0 auto; }
+.checkout-body {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 24px; padding-bottom: 110px; /* espacio para el footer fijo */
+  max-width: 720px; width: 100%; margin: 0 auto;
+}
 .checkout-footer {
-  background: white; padding: 16px 24px; border-top: 1px solid var(--border);
-  flex-shrink: 0;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white; padding: 16px 24px;
+  border-top: 2px solid var(--border);
+  z-index: 50;
 }
 .field { margin-bottom: 24px; }
 .field label {
@@ -365,7 +371,7 @@ input, textarea { font-family: inherit; font-size: 18px; }
   .btn-primary { padding: 18px; font-size: 16px; }
 
   /* Checkout */
-  .checkout-body { padding: 14px; }
+  .checkout-body { padding: 14px; padding-bottom: 90px; }
   .checkout-footer { padding: 12px 14px; }
   .field { margin-bottom: 18px; }
   .field label { font-size: 14px; }
