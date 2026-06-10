@@ -179,6 +179,7 @@ async function loadServer() {
 // ─── Containers + per-bot stats ───────────────────────
 let _containers = [];
 let _statsMap   = {};
+let _instances  = [];
 
 async function loadContainersAndStats() {
   await Promise.all([loadContainers(), loadStats()]);
@@ -186,7 +187,10 @@ async function loadContainersAndStats() {
 
 async function loadContainers() {
   try {
-    _containers = await api("GET", "/containers");
+    [_containers, _instances] = await Promise.all([
+      api("GET", "/containers"),
+      api("GET", "/instances").catch(() => []),
+    ]);
     renderBots();
     $("#bots-ts").textContent = `Actualizado ${tsNow()}`;
   } catch {}
@@ -204,11 +208,15 @@ const SC = { running: "on", exited: "off", paused: "warn", restarting: "warn" };
 const SL = { running: "Activo", exited: "Detenido", paused: "Pausado", restarting: "Reiniciando" };
 
 function renderBots() {
-  if (!_containers.length) {
+  const drafts = _instances.filter(i => !i._running);
+  if (!_containers.length && !drafts.length) {
     $("#bots-grid").innerHTML = `<div class="stat-placeholder">No se encontraron instancias de bot.</div>`;
     return;
   }
-  $("#bots-grid").innerHTML = _containers.map(c => botCard(c)).join("");
+  $("#bots-grid").innerHTML = [
+    ..._containers.map(c => botCard(c)),
+    ...drafts.map(i => draftCard(i)),
+  ].join("");
 }
 
 function botCard(c) {
@@ -266,6 +274,27 @@ function botCard(c) {
   </div>`;
 }
 
+function draftCard(inst) {
+  return `
+  <div class="bot-card" style="border-style:dashed;opacity:0.85">
+    <div class="bot-head">
+      <div class="bot-avatar">&#127829;</div>
+      <div>
+        <div class="bot-name">${esc(inst.name)} <span style="font-size:11px;font-weight:400;color:var(--soft)">(sin desplegar)</span></div>
+        <div class="bot-meta">
+          <span class="badge warn">Configurado</span>
+          <span>:${esc(String(inst.KIOSK_PORT || "—"))}</span>
+        </div>
+      </div>
+    </div>
+    <div class="bot-actions">
+      <button class="btn-primary" data-cfg="${esc(inst.name)}" data-draft="true">Configurar</button>
+      <button class="btn-primary" data-deploy-inst="${esc(inst.name)}" style="background:var(--green,#1a7a4a)">&#9654; Desplegar</button>
+      <button class="btn-sec" style="color:#e05;border-color:#e05" data-del-inst="${esc(inst.name)}">Eliminar</button>
+    </div>
+  </div>`;
+}
+
 // ─── Clone modal ──────────────────────────────────────
 function openCloneModal(sourceName) {
   openModal("Nueva instancia", `
@@ -301,10 +330,10 @@ async function doClone(sourceName) {
   const btn = $("#do-clone-btn");
   if (btn) { btn.disabled = true; btn.textContent = "Creando…"; }
   try {
-    const r = await api("POST", "/instances", { slug, brandName: brand, port });
+    const r = await api("POST", "/instances", { slug, brandName: brand, port, source: sourceName });
     closeModal();
-    toast(`"${brand}" creada en puerto ${r.port} ✓`);
-    setTimeout(loadContainersAndStats, 3500);
+    toast(`"${brand}" creada — configúrala y luego despliégala ✓`);
+    setTimeout(loadContainersAndStats, 1000);
   } catch (ex) {
     toast(ex.message, true);
     if (btn) { btn.disabled = false; btn.textContent = "Crear instancia"; }
@@ -317,6 +346,15 @@ async function deleteInstance(name) {
     await api("DELETE", `/instances/${name}`);
     toast(`Instancia "${name}" eliminada`);
     loadContainersAndStats();
+  } catch (ex) { toast(ex.message, true); }
+}
+
+async function deployInstance(name) {
+  if (!confirm(`¿Desplegar la instancia "${name}"?\nSe creará el contenedor Docker y arrancará en el puerto configurado.`)) return;
+  try {
+    const r = await api("POST", `/instances/${name}/deploy`);
+    toast(`"${name}" desplegado en puerto ${r.port} ✓`);
+    setTimeout(loadContainersAndStats, 4000);
   } catch (ex) { toast(ex.message, true); }
 }
 
@@ -688,7 +726,7 @@ async function deleteUser(id, username) {
 
 // ─── Event delegation ─────────────────────────────────
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save],[data-deploy],[data-clone],[data-del-inst],[data-save-user],[data-edit-user],[data-del-user],[data-source]");
+  const t = e.target.closest("[data-action],[data-cfg],[data-restart],[data-save],[data-deploy],[data-deploy-inst],[data-clone],[data-del-inst],[data-save-user],[data-edit-user],[data-del-user],[data-source]");
   if (!t) return;
   const d = t.dataset;
 
@@ -700,16 +738,21 @@ document.addEventListener("click", async e => {
   if (d.action === "new-instance")  return openCloneModal("donatto");
   if (d.action === "load-menu")     return loadMenuIntoModal(_lastConfigName);
 
-  if (d.cfg)      return openConfig(d.cfg, _containers.find(c => c.name === d.cfg)?.isPrimary !== false);
-  if (d.restart)  return restartBot(d.restart);
-  if (d.save)     { await saveConfig(d.save); closeModal(); return; }
-  if (d.deploy)   return deployConfig(d.deploy);
-  if (d.clone)    return openCloneModal(d.clone);
-  if (d.source)   return doClone(d.source);
-  if (d.delInst)  return deleteInstance(d.delInst);
-  if (d.saveUser) return saveUser(d.saveUser);
-  if (d.editUser) return openEditUserModal(d.editUser, d.username, d.role);
-  if (d.delUser)  return deleteUser(d.delUser, d.username);
+  if (d.cfg) {
+    const container = _containers.find(c => c.name === d.cfg);
+    const isPrimary = container ? container.isPrimary !== false : false;
+    return openConfig(d.cfg, isPrimary);
+  }
+  if (d.restart)    return restartBot(d.restart);
+  if (d.save)       { await saveConfig(d.save); closeModal(); return; }
+  if (d.deploy)     return deployConfig(d.deploy);
+  if (d.deployInst) return deployInstance(d.deployInst);
+  if (d.clone)      return openCloneModal(d.clone);
+  if (d.source)     return doClone(d.source);
+  if (d.delInst)    return deleteInstance(d.delInst);
+  if (d.saveUser)   return saveUser(d.saveUser);
+  if (d.editUser)   return openEditUserModal(d.editUser, d.username, d.role);
+  if (d.delUser)    return deleteUser(d.delUser, d.username);
 });
 
 checkSession();

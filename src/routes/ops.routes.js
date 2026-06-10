@@ -216,12 +216,23 @@ function writeConfig(name, data) {
   fs.writeFileSync(path.join(INSTANCES_DIR, `${name}.json`), JSON.stringify(data, null, 2));
 }
 
-router.get("/instances", requireOpsAuth, (_req, res) => {
+router.get("/instances", requireOpsAuth, async (_req, res) => {
   try {
-    const items = fs.readdirSync(INSTANCES_DIR)
-      .filter(f => f.endsWith(".json"))
-      .map(f => ({ name: f.replace(".json", ""), ...readConfig(f.replace(".json", "")) }));
-    res.json(items);
+    const files = fs.readdirSync(INSTANCES_DIR).filter(f => f.endsWith(".json"));
+    const items = files.map(f => ({ name: f.replace(".json", ""), ...readConfig(f.replace(".json", "")) }));
+
+    let runningSet = new Set();
+    try {
+      const filter = encodeURIComponent(JSON.stringify({ label: ["donatto-bot=true"] }));
+      const { body } = await dockerRequest("GET", `/containers/json?all=true&filters=${filter}`);
+      if (Array.isArray(body)) {
+        for (const c of body) {
+          if (c.State === "running" && c.Labels?.["donatto-name"]) runningSet.add(c.Labels["donatto-name"]);
+        }
+      }
+    } catch {}
+
+    res.json(items.map(i => ({ ...i, _running: runningSet.has(i.name) })));
   } catch { res.json([]); }
 });
 
@@ -306,8 +317,15 @@ async function deployInstanceContainer(slug, config) {
   return { containerName, port: Number(port) };
 }
 
-router.post("/instances", requireOpsAuth, async (req, res) => {
-  const { slug, brandName, port } = req.body || {};
+const CLONE_SENSITIVE_KEYS = new Set([
+  "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENAI_API_KEY",
+  "DEEPSEEK_API_KEY", "TOGETHER_API_KEY", "MISTRAL_API_KEY", "COHERE_API_KEY",
+  "BOT_PHONE", "DISPATCH_NUMBER", "SESSION_SECRET", "ADMIN_INITIAL_PASSWORD",
+  "KIOSK_PORT", "BRAND_NAME",
+]);
+
+router.post("/instances", requireOpsAuth, (req, res) => {
+  const { slug, brandName, port, source } = req.body || {};
   if (!slug || !brandName) return res.status(400).json({ error: "slug y brandName requeridos" });
   if (!/^[a-z0-9][a-z0-9-]{0,29}$/.test(slug))
     return res.status(400).json({ error: "slug: solo minúsculas, dígitos y guiones (máx 30)" });
@@ -323,24 +341,39 @@ router.post("/instances", requireOpsAuth, async (req, res) => {
   let assignedPort = port ? Number(port) : 3001;
   while (usedPorts.has(assignedPort)) assignedPort++;
 
-  const config = {
-    BRAND_NAME:             brandName,
-    KIOSK_PORT:             String(assignedPort),
-    WHATSAPP_LOCAL_ENABLED: "false",
-    KIOSK_ENABLED:          "true",
-    KIOSK_PAYMENTS:         "efectivo",
-    TIMEZONE:               "America/Bogota",
-    ADMIN_INITIAL_PASSWORD: "donatto2026",
-    SESSION_SECRET:         crypto.randomBytes(32).toString("hex"),
-  };
+  let config;
+  if (source) {
+    const srcCfg = readConfig(source);
+    config = {};
+    for (const [k, v] of Object.entries(srcCfg)) {
+      if (!CLONE_SENSITIVE_KEYS.has(k)) config[k] = v;
+    }
+  } else {
+    config = {
+      WHATSAPP_LOCAL_ENABLED: "false",
+      KIOSK_ENABLED:          "true",
+      KIOSK_PAYMENTS:         "efectivo",
+      TIMEZONE:               "America/Bogota",
+    };
+  }
+  config.BRAND_NAME             = brandName;
+  config.KIOSK_PORT             = String(assignedPort);
+  config.SESSION_SECRET         = crypto.randomBytes(32).toString("hex");
+  config.ADMIN_INITIAL_PASSWORD = "donatto2026";
+
   writeConfig(slug, config);
 
-  try {
-    const result = await deployInstanceContainer(slug, config);
-    res.json({ ok: true, slug, port: result.port });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  // Copy source menu.json if cloning
+  if (source) {
+    const srcMenu = path.join(INSTANCES_DIR, source, "data", "menu.json");
+    if (fs.existsSync(srcMenu)) {
+      const destDir = path.join(INSTANCES_DIR, slug, "data");
+      fs.mkdirSync(destDir, { recursive: true });
+      fs.copyFileSync(srcMenu, path.join(destDir, "menu.json"));
+    }
   }
+
+  res.json({ ok: true, slug, port: assignedPort, deployed: false });
 });
 
 router.delete("/instances/:name", requireOpsAuth, async (req, res) => {
