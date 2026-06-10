@@ -94,6 +94,18 @@ CREATE TABLE IF NOT EXISTS customers (
   created_at TEXT DEFAULT (datetime('now','-5 hours'))
 );
 
+-- Memoria de clientes WhatsApp: permite que el bot reconozca a clientes recurrentes
+CREATE TABLE IF NOT EXISTS customer_memory (
+  phone              TEXT PRIMARY KEY REFERENCES customers(phone) ON DELETE CASCADE,
+  preferred_name     TEXT,                           -- nombre que prefiere usar
+  visit_count        INTEGER NOT NULL DEFAULT 1,     -- número de veces que ha interactuado
+  last_seen          TEXT,                           -- última interacción
+  last_order_summary TEXT,                           -- resumen del último pedido (texto libre)
+  address_hint       TEXT,                           -- dirección más usada
+  notes              TEXT,                           -- notas internas (ej: "alérgico a nueces")
+  updated_at         TEXT DEFAULT (datetime('now','-5 hours'))
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   ticket_number  TEXT,                               -- K-001 (kiosko) / W-001 (whatsapp)

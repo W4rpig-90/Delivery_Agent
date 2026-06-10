@@ -12,6 +12,7 @@ const { setWaDispatchSender } = require("../dispatchNotifier");
 const settingsRepo = require("../../src/repositories/settings.repo");
 const waState = require("../../src/services/whatsappState");
 const { isOpen, closedMessage } = require("../../src/services/businessHours");
+const { touchMemory, buildContextBlock, updateAfterOrder } = require("../../src/repositories/customers.repo");
 
 function getDispatchNumber() {
   try { return settingsRepo.getSetting("dispatch_number") || process.env.DISPATCH_NUMBER; }
@@ -48,7 +49,17 @@ function initialize() {
 
   setStatusNotifier(async (order, _status, message) => {
     if (!order.customer_phone || !message) return;
-    await client.sendMessage(`${order.customer_phone}@c.us`, message);
+    // Resolvemos el WA ID del número para evitar "No LID for user"
+    try {
+      const numberId = await client.getNumberId(order.customer_phone);
+      if (!numberId) {
+        console.warn(`[WA] Número ${order.customer_phone} no encontrado en WhatsApp — notificación omitida`);
+        return;
+      }
+      await client.sendMessage(numberId._serialized, message);
+    } catch (err) {
+      console.error(`[WA] Error enviando notificación de estado a ${order.customer_phone}:`, err.message);
+    }
   });
 
   client.on("qr", (qr) => {
@@ -151,12 +162,19 @@ async function handleCustomerMessage(msg, phone) {
 
   const session = getSession(phone);
 
+  // Registro de visita y contexto de memoria (primera vez en esta sesión)
+  if (!session._memoryLoaded) {
+    try { touchMemory(phone); } catch (err) { console.warn("[MEM] touchMemory:", err.message); }
+    session._memoryLoaded = true;
+  }
+  const customerContext = buildContextBlock(phone);
+
   // Notas de voz
   if (msg.type === "ptt" || msg.type === "audio") {
     try {
       const media = await msg.downloadMedia();
       if (!media) { await msg.reply("No pude descargar tu nota de voz 😓 Escríbeme tu pedido."); return; }
-      const { transcription, botResponse } = await chatWithAudio(session.history, media.data, media.mimetype);
+      const { transcription, botResponse } = await chatWithAudio(session.history, media.data, media.mimetype, customerContext);
       const { data: markerData, cleanResponse } = extractMarkersFromResponse(botResponse);
       if (Object.keys(markerData).length > 0) session.deliveryData = { ...session.deliveryData, ...markerData };
       addToHistory(session, "user", transcription);
@@ -181,7 +199,7 @@ async function handleCustomerMessage(msg, phone) {
   }
 
   try {
-    const botResponse = await chat(session.history, userText);
+    const botResponse = await chat(session.history, userText, customerContext);
     const { data: markerData, cleanResponse } = extractMarkersFromResponse(botResponse);
     if (Object.keys(markerData).length > 0) session.deliveryData = { ...session.deliveryData, ...markerData };
     addToHistory(session, "user", userText);
@@ -232,7 +250,18 @@ async function handleOrderConfirmed(phone, session, botResponse = "") {
     console.warn("[DESPACHO] Sin número de despacho configurado — ticket no enviado.");
   }
 
-  // 4. Confirmar al cliente (sin imprimir: la impresión ocurre cuando cocina acepta)
+  // 4. Guardar memoria del cliente (nombre, dirección, resumen del pedido)
+  try {
+    updateAfterOrder(phone, {
+      name:         dd.nombre    || null,
+      address:      dd.direccion || null,
+      orderSummary: dd.resumenPedido ? dd.resumenPedido.slice(0, 200) : null,
+    });
+  } catch (err) {
+    console.warn("[MEM] updateAfterOrder:", err.message);
+  }
+
+  // 5. Confirmar al cliente (sin imprimir: la impresión ocurre cuando cocina acepta)
   await client.sendMessage(`${phone}@c.us`,
     `🧾 ¡Listo${dd.nombre ? ", " + dd.nombre : ""}! Tu pedido *${order.ticket_number}* fue recibido. Apenas la cocina lo confirme te aviso. 🙌`
   ).catch(() => {});

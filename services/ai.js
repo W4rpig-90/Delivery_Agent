@@ -57,11 +57,11 @@ function toMessages(history, userMessage) {
 }
 
 // ─── Proveedor: Gemini ────────────────────────────────────────────────────
-async function chatGemini(cfg, history, userMessage) {
+async function chatGemini(cfg, history, userMessage, systemPrompt) {
   const genAI = new GoogleGenerativeAI(cfg.geminiKey);
   const model = genAI.getGenerativeModel({
     model: cfg.model,
-    systemInstruction: SYSTEM_PROMPT,
+    systemInstruction: systemPrompt,
     generationConfig: { maxOutputTokens: 1024, temperature: 0.4 },
   });
   const session = model.startChat({ history });
@@ -70,7 +70,7 @@ async function chatGemini(cfg, history, userMessage) {
 }
 
 // ─── Proveedor: Anthropic (Claude) ───────────────────────────────────────
-async function chatAnthropic(cfg, history, userMessage) {
+async function chatAnthropic(cfg, history, userMessage, systemPrompt) {
   const messages = toMessages(history, userMessage);
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -82,7 +82,7 @@ async function chatAnthropic(cfg, history, userMessage) {
     body: JSON.stringify({
       model:      cfg.model,
       max_tokens: 1024,
-      system:     SYSTEM_PROMPT,
+      system:     systemPrompt,
       messages,
     }),
   });
@@ -111,14 +111,14 @@ function resolveOpenAICompat(cfg) {
   return                                  { baseUrl: "https://api.openai.com/v1",           key: cfg.openaiKey };
 }
 
-async function chatOpenAICompat(cfg, history, userMessage) {
+async function chatOpenAICompat(cfg, history, userMessage, systemPrompt) {
   const { baseUrl, key } = resolveOpenAICompat(cfg);
   const modelId = cfg.model === "ollama"
     ? (process.env.OLLAMA_MODEL || "llama3")
     : cfg.model;
 
   const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: systemPrompt },
     ...toMessages(history, userMessage),
   ];
 
@@ -139,19 +139,20 @@ async function chatOpenAICompat(cfg, history, userMessage) {
 }
 
 // ─── Chat principal ───────────────────────────────────────────────────────
-async function chat(history, userMessage) {
+async function chat(history, userMessage, customerContext = "") {
   const cfg = getConfig();
   const m   = cfg.model;
+  const systemPrompt = customerContext ? SYSTEM_PROMPT + customerContext : SYSTEM_PROMPT;
 
   console.log(`[AI] Proveedor: ${m}`);
 
-  if (m.startsWith("claude-"))  return chatAnthropic(cfg, history, userMessage);
-  if (m.startsWith("gemini-"))  return chatGemini(cfg, history, userMessage);
-  return chatOpenAICompat(cfg, history, userMessage);
+  if (m.startsWith("claude-"))  return chatAnthropic(cfg, history, userMessage, systemPrompt);
+  if (m.startsWith("gemini-"))  return chatGemini(cfg, history, userMessage, systemPrompt);
+  return chatOpenAICompat(cfg, history, userMessage, systemPrompt);
 }
 
 // ─── Audio (siempre usa Gemini — único proveedor con soporte nativo) ──────
-async function chatWithAudio(history, audioBase64, mimeType) {
+async function chatWithAudio(history, audioBase64, mimeType, customerContext = "") {
   const cfg = getConfig();
 
   if (!cfg.geminiKey) {
@@ -161,12 +162,12 @@ async function chatWithAudio(history, audioBase64, mimeType) {
     };
   }
 
-  // Para audio usamos Gemini independientemente del modelo de texto configurado
   const audioModelId = cfg.model.startsWith("gemini-") ? cfg.model : "gemini-2.0-flash";
+  const systemPrompt = customerContext ? SYSTEM_PROMPT + customerContext : SYSTEM_PROMPT;
   const genAI = new GoogleGenerativeAI(cfg.geminiKey);
   const model = genAI.getGenerativeModel({
     model: audioModelId,
-    systemInstruction: SYSTEM_PROMPT,
+    systemInstruction: systemPrompt,
     generationConfig: { maxOutputTokens: 1024, temperature: 0.4 },
   });
 
