@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#ff6b2c"/>
+  <rect width="512" height="512" rx="96" fill="#1E2229"/>
   <!-- Screen/monitor frame -->
   <rect x="96" y="128" width="320" height="220" rx="20" fill="white" opacity="0.2" stroke="white" stroke-width="16"/>
   <!-- Screen content -->
@@ -8,11 +8,11 @@
   <rect x="216" y="348" width="80" height="28" rx="6" fill="white"/>
   <rect x="172" y="372" width="168" height="18" rx="9" fill="white"/>
   <!-- Chart bars on screen -->
-  <rect x="150" y="264" width="32" height="44" rx="4" fill="#ff6b2c"/>
-  <rect x="198" y="236" width="32" height="72" rx="4" fill="#ff6b2c"/>
-  <rect x="246" y="250" width="32" height="58" rx="4" fill="#ff6b2c"/>
-  <rect x="294" y="220" width="32" height="88" rx="4" fill="#ff6b2c"/>
+  <rect x="150" y="264" width="32" height="44" rx="4" fill="#FF4A3A"/>
+  <rect x="198" y="236" width="32" height="72" rx="4" fill="#FF4A3A"/>
+  <rect x="246" y="250" width="32" height="58" rx="4" fill="#FF4A3A"/>
+  <rect x="294" y="220" width="32" height="88" rx="4" fill="#FF4A3A"/>
   <!-- Screen top line -->
-  <line x1="150" y1="186" x2="340" y2="186" stroke="#ff6b2c" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
-  <line x1="150" y1="210" x2="270" y2="210" stroke="#ff6b2c" stroke-width="8" stroke-linecap="round" opacity="0.25"/>
+  <line x1="150" y1="186" x2="340" y2="186" stroke="#FF4A3A" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+  <line x1="150" y1="210" x2="270" y2="210" stroke="#FF4A3A" stroke-width="8" stroke-linecap="round" opacity="0.25"/>
 </svg>

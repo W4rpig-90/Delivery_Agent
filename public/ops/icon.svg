@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#ff6b2c"/>
+  <rect width="512" height="512" rx="96" fill="#1E2229"/>
   <!-- Server rack shape -->
   <rect x="120" y="96" width="272" height="320" rx="16" fill="none" stroke="white" stroke-width="16"/>
   <!-- Rack units -->
@@ -13,8 +13,8 @@
   <circle cx="332" cy="282" r="8" fill="#fbbf24"/>
   <circle cx="332" cy="350" r="8" fill="#f87171"/>
   <!-- Drive slots -->
-  <rect x="160" y="136" width="120" height="8" rx="4" fill="#ff6b2c" opacity="0.5"/>
-  <rect x="160" y="152" width="80" height="8" rx="4" fill="#ff6b2c" opacity="0.35"/>
-  <rect x="160" y="204" width="120" height="8" rx="4" fill="#ff6b2c" opacity="0.5"/>
-  <rect x="160" y="220" width="80" height="8" rx="4" fill="#ff6b2c" opacity="0.35"/>
+  <rect x="160" y="136" width="120" height="8" rx="4" fill="#FF4A3A" opacity="0.5"/>
+  <rect x="160" y="152" width="80" height="8" rx="4" fill="#FF4A3A" opacity="0.35"/>
+  <rect x="160" y="204" width="120" height="8" rx="4" fill="#FF4A3A" opacity="0.5"/>
+  <rect x="160" y="220" width="80" height="8" rx="4" fill="#FF4A3A" opacity="0.35"/>
 </svg>

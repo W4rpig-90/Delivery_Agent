@@ -6,7 +6,7 @@
   "scope": "/kiosko/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0a0a0a",
+  "background_color": "#FFFFFF",
   "theme_color": "#ff6b2c",
   "lang": "es",
   "icons": [
